@@ -1,0 +1,18 @@
+# Continuation-style wrapper for base (pre-instruction) language models.
+
+This adapter exists because GPT-2 XL and GPT-J predate chat interfaces. They are trained to continue text, not to follow instructions.
+
+Template (`continuation-v1`):
+
+```
+Task: {raw_prompt}
+
+Answer:
+```
+
+Rules:
+
+- `raw_prompt` is inserted verbatim between `Task: ` and the blank line.
+- No system message, no few-shot examples, no chain-of-thought nudge, no role tags.
+- The trailing `Answer:` cue is the only structure; it is shown in the audit drawer as `prepared_text`.
+- `was_truncated` is always false; over-length prompts raise `InputUnsupportedError`.

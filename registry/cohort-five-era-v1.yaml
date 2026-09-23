@@ -1,0 +1,131 @@
+# Five-era cohort for ~16 GB RAM hosts with ~25 GB disk budget.
+# Protocol local-v1. cohort_id: five-era-v1
+# Modern slots are Q4_K_M GGUF (local_quantized). Not the full standard local-v1 FP16 cohort.
+schema_version: "1"
+cohort_id: five-era-v1
+protocol_version: local-v1
+prompt:
+  max_chars: 900
+  language_note: "English supported path; non-English warned but permitted"
+generation_profile_id: local-v1
+generation_profiles:
+  local-v1:
+    id: local-v1
+    max_new_tokens: 320
+    temperature: 0.7
+    top_p: 0.95
+    seed: 20260923
+    retries: 0
+    tools_enabled: false
+    network_enabled: false
+models:
+  - id: gpt2-2019
+    display_year: 2019
+    display_name: GPT-2
+    release_date: "2019-02-14"
+    mode: base_continuation
+    source:
+      repository: openai-community/gpt2
+      revision: 607a30d783dfa663caf39e06633721c8d4cfcd7e
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/openai-community/gpt2
+    backend: transformers
+    precision: fp32
+    adapter_id: continuation-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Small GPT-2, not GPT-2 XL (disk/RAM constrained host).
+      - Base language model with no instruction tuning.
+      - Often continues or wanders instead of answering.
+    hardware_profile: lite
+
+  - id: gpt2-medium-2021
+    display_year: 2021
+    display_name: GPT-2 Medium
+    release_date: "2019-02-14"
+    mode: base_continuation
+    source:
+      repository: openai-community/gpt2-medium
+      revision: 6dcaa7a952f72f9298047fd5137cd6e4f05f41da
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/openai-community/gpt2-medium
+    backend: transformers
+    precision: fp32
+    adapter_id: continuation-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - "Stand-in for GPT-J 6B (same era class: stronger base LM)."
+      - "Base completion model; not instruction-tuned."
+    hardware_profile: lite
+
+  - id: flan-t5-large-2022
+    display_year: 2022
+    display_name: FLAN-T5 Large
+    release_date: "2022-10-11"
+    mode: instruction
+    source:
+      repository: google/flan-t5-large
+      revision: 0613663d0d48ea86ba8cb3d7a44f0f65dc596a2a
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/google/flan-t5-large
+    backend: transformers
+    precision: fp32
+    adapter_id: instruction-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Smaller than FLAN-T5 XL (standard cohort).
+      - Encoder-decoder; shorter answers than chat models.
+    hardware_profile: lite
+
+  - id: mistral-7b-instruct-2023
+    display_year: 2023
+    display_name: Mistral 7B Instruct v0.2
+    release_date: "2023-12-11"
+    mode: chat
+    source:
+      repository: TheBloke/Mistral-7B-Instruct-v0.2-GGUF
+      revision: 3a6fbf4a41a1d52e415a4958cde6856d34b2db93
+      artifact_filename: mistral-7b-instruct-v0.2.Q4_K_M.gguf
+      sha256: record-at-preload
+    license_url: https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2
+    backend: local_quantized
+    precision: q4_k_m
+    adapter_id: chat-mistral-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Q4_K_M GGUF quantization; not identical to full-precision weights.
+      - Local CPU inference via llama.cpp (slower than GPU).
+    hardware_profile: standard
+
+  - id: qwen25-7b-instruct-2024
+    display_year: 2024
+    display_name: Qwen2.5 7B Instruct
+    release_date: "2024-09-19"
+    mode: chat
+    source:
+      repository: Qwen/Qwen2.5-7B-Instruct-GGUF
+      revision: bb5d59e06d9551d752d08b292a50eb208b07ab1f
+      artifact_filename: qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf
+      sha256: record-at-preload
+    license_url: https://huggingface.co/Qwen/Qwen2.5-7B-Instruct
+    backend: local_quantized
+    precision: q4_k_m
+    adapter_id: chat-qwen-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Q4_K_M GGUF quantization; not API/full-precision weights.
+      - Not a verified 2024 frontier model — representative open instruct.
+    hardware_profile: standard

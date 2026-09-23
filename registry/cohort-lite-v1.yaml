@@ -1,0 +1,89 @@
+# Lite substitute cohort — protocol local-v1 / hardware profile: lite
+# Visible limitation: NOT the standard local-v1 five-model cohort.
+# Used when disk/RAM cannot hold the standard laptop cohort (see docs/hardware-profiles.md).
+schema_version: "1"
+cohort_id: lite-v1
+protocol_version: local-v1
+prompt:
+  max_chars: 900
+  language_note: "English supported path; non-English warned but permitted"
+generation_profile_id: local-v1
+generation_profiles:
+  local-v1:
+    id: local-v1
+    max_new_tokens: 320
+    temperature: 0.7
+    top_p: 0.95
+    seed: 20260923
+    retries: 0
+    tools_enabled: false
+    network_enabled: false
+models:
+  - id: gpt2-2019
+    display_year: 2019
+    display_name: GPT-2 (small)
+    release_date: "2019-02-14"
+    mode: base_continuation
+    source:
+      repository: openai-community/gpt2
+      revision: 607a30d783dfa663caf39e06633721c8d4cfcd7e
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/openai-community/gpt2
+    backend: transformers
+    precision: fp32
+    adapter_id: continuation-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Lite substitute for GPT-2 XL; smaller and weaker than the standard 2019 slot.
+      - Base language model with no instruction tuning.
+      - Often continues or wanders instead of answering.
+    hardware_profile: lite
+
+  - id: gpt2-medium-2021
+    display_year: 2021
+    display_name: GPT-2 Medium
+    release_date: "2019-02-14"
+    mode: base_continuation
+    source:
+      repository: openai-community/gpt2-medium
+      revision: 6dcaa7a952f72f9298047fd5137cd6e4f05f41da
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/openai-community/gpt2-medium
+    backend: transformers
+    precision: fp32
+    adapter_id: continuation-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Lite substitute for GPT-J 6B; still GPT-2 family, not EleutherAI GPT-J.
+      - Base completion model; not instruction-tuned.
+      - Fluent continuation can still be ungrounded.
+    hardware_profile: lite
+
+  - id: flan-t5-base-2022
+    display_year: 2022
+    display_name: FLAN-T5 Base
+    release_date: "2022-10-11"
+    mode: instruction
+    source:
+      repository: google/flan-t5-base
+      revision: 7bcac572ce56db69c1ea7c8af255c5d7c9672fc2
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/google/flan-t5-base
+    backend: transformers
+    precision: fp32
+    adapter_id: instruction-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Lite substitute for FLAN-T5 XL; weaker than the standard 2022 slot.
+      - Encoder-decoder; shorter answers than later chat models.
+      - Marks the instruction-tuning transition even at small scale.
+    hardware_profile: lite

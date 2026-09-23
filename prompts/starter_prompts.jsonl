@@ -1,0 +1,5 @@
+{"id": "creative-01", "category": "constrained creative writing", "prompt": "Write a four-line poem about a lighthouse that never turns its lamp on. Each line must begin with the letter L."}
+{"id": "debug-01", "category": "debugging/explanation without code execution", "prompt": "Explain to a junior developer why this loop might not update the UI: a list is mutated in place and then bound to a table that only re-renders on new list identity."}
+{"id": "logic-01", "category": "logic or wordplay", "prompt": "A farmer has chickens and rabbits. There are 35 heads and 94 legs. How many of each animal are there? Show the reasoning briefly."}
+{"id": "extract-01", "category": "structured extraction from noisy text", "prompt": "From this messy note, extract name, date, and amount as a short list: \"met w/ Dana K. on 3/12 — reimb. $84.50 for client lunch at Rivet Cafe, needs receipt follow-up\""}
+{"id": "plan-01", "category": "analytical planning or argument", "prompt": "Give three concrete pros and three cons of a city banning private cars in its historic center. One sentence each."}

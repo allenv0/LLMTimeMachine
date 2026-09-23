@@ -1,0 +1,52 @@
+# Local data — never commit prompts or results
+local-data/
+local-data/**
+
+# Model caches and weights
+models/
+models/**
+*.safetensors
+*.bin
+*.gguf
+*.pt
+*.ckpt
+
+# Exports
+export/
+export/**
+*.zip
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Preload cache index (machine-local)
+.cache/
+.cache/**
+local-cache-index.json

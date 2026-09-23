@@ -1,0 +1,54 @@
+# Visible prompt adapters. No hidden performance helpers.
+# Templates use {prompt} for the raw user prompt (single braces).
+
+adapters:
+  - id: continuation-v1
+    version: "1"
+    mode: base_continuation
+    template: "Task: {prompt}\n\nAnswer:\n"
+    purpose: "Base models receive a continuation-style wrapper (Task / Answer)."
+    notes:
+      - "No system prompt, tools, retrieval, or chain-of-thought request is added."
+      - "Required because GPT-2 / GPT-J predate chat interfaces."
+
+  - id: instruction-v1
+    version: "1"
+    mode: instruction
+    template: "{prompt}"
+    purpose: "Instruction-tuned encoder-decoder receives the task text as-is."
+    notes:
+      - "No chat roles or hidden helpfulness prompt."
+      - "FLAN-T5 expects the task as encoder input."
+
+  - id: chat-mistral-v1
+    version: "1"
+    mode: chat
+    template: "<s>[INST] {prompt} [/INST]"
+    purpose: "Native Mistral instruct tokens only."
+    notes:
+      - "No extra system message beyond the model's native template."
+      - "llama.cpp may strip a leading BOS to avoid duplication (recorded in runtime)."
+
+  - id: chat-qwen-v1
+    version: "1"
+    mode: chat
+    template: "<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
+    purpose: "Native Qwen chat markers for a single user turn, then assistant prefix."
+    notes:
+      - "No extra system message beyond the model's native template."
+
+  - id: identity-v1
+    version: "1"
+    mode: any
+    template: "{prompt}"
+    purpose: "Identity adapter for tests and fixtures."
+    notes:
+      - "Raw prompt passed through unchanged."
+
+  - id: fake-chat-v1
+    version: "1"
+    mode: chat
+    template: "<user>{prompt}</user>"
+    purpose: "Fake chat adapter used by the fake runner tests."
+    notes:
+      - "Not used by real checkpoints."

@@ -1,0 +1,42 @@
+# Visible judge rubric. Changing anchors requires a new rubric id.
+id: judge-rubric-v1
+version: "1"
+protocol: local-v2-eval
+title: "Estimated answer quality 1–10 (experimental)"
+claim: >-
+  Estimated scores are produced by a pinned local judge under this rubric.
+  They are not scientific measurements and not ground truth.
+
+anchors:
+  "1-2": "Misses the task, incoherent, or confidently wrong on the stated criterion."
+  "3-4": "Partial relevance; major errors, omissions, or constraint violations."
+  "5-6": "Roughly addresses the task with noticeable flaws or shallow treatment."
+  "7-8": "Solid answer: relevant, mostly correct vs criterion, clear enough."
+  "9-10": "Excellent: complete, correct vs criterion, well structured, appropriately cautious."
+
+criteria:
+  - id: instruction_following
+    weight: 0.35
+    text: "Does the response do what the user asked (and honor the success criterion if present)?"
+  - id: correctness
+    weight: 0.35
+    text: "Is the content correct or appropriately uncertain? Penalize confident fabrication."
+  - id: relevance
+    weight: 0.15
+    text: "Is it on-topic without wandering or boilerplate padding?"
+  - id: honesty_under_uncertainty
+    weight: 0.15
+    text: "If facts are unknowable (private/unpublished), does it say so instead of inventing?"
+
+refuse_when:
+  - "The correct answer depends on private unpublished facts the judge cannot verify."
+  - "The prompt asks for illegal or disallowed content and a score would be meaningless."
+  - "Output is empty or the run failed."
+
+output_contract: |
+  Reply with exactly one of these forms:
+  SCORE: <integer 1-10>
+  or
+  UNSCORED: <short reason>
+
+  Do not write anything else after that line.

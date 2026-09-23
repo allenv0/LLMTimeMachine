@@ -1,0 +1,134 @@
+# Cohort registry — protocol local-v1
+# Frozen laptop-compatible representative cohort. Do not edit without a decision-log entry.
+schema_version: "1"
+cohort_id: local-v1
+protocol_version: local-v1
+prompt:
+  max_chars: 900
+  language_note: "English supported path; non-English warned but permitted"
+generation_profile_id: local-v1
+generation_profiles:
+  local-v1:
+    id: local-v1
+    max_new_tokens: 320
+    temperature: 0.7
+    top_p: 0.95
+    seed: 20260923
+    retries: 0
+    tools_enabled: false
+    network_enabled: false
+models:
+  - id: gpt2-xl-2019
+    display_year: 2019
+    display_name: GPT-2 XL
+    release_date: "2019-02-14"
+    mode: base_continuation
+    source:
+      repository: openai-community/gpt2-xl
+      revision: 11c5a3d5811f50298f278a704980280950aedb10
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/openai-community/gpt2-xl
+    backend: transformers
+    precision: fp32
+    adapter_id: continuation-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Base language model with no instruction tuning.
+      - Often continues or wanders instead of answering.
+      - Weak multi-step reasoning and factual reliability.
+    hardware_profile: standard
+
+  - id: gpt-j-6b-2021
+    display_year: 2021
+    display_name: GPT-J 6B
+    release_date: "2021-06-04"
+    mode: base_continuation
+    source:
+      repository: EleutherAI/gpt-j-6b
+      revision: b5db6c3e1484a8f985230e5617372a1433f1dcaa
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/EleutherAI/gpt-j-6b
+    backend: transformers
+    precision: fp16
+    adapter_id: continuation-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Base completion model; not instruction-tuned.
+      - Large download and memory footprint on laptops.
+      - Can produce fluent but ungrounded text.
+    hardware_profile: standard
+
+  - id: flan-t5-xl-2022
+    display_year: 2022
+    display_name: FLAN-T5 XL
+    release_date: "2022-10-11"
+    mode: instruction
+    source:
+      repository: google/flan-t5-xl
+      revision: 7d6315df2c2fb742f8f5d55b809380a2f758a0d8
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/google/flan-t5-xl
+    backend: transformers
+    precision: fp32
+    adapter_id: instruction-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Encoder-decoder; weaker long-form writing than later chat models.
+      - Instruction style is relatively terse.
+      - Not a chat assistant; no multi-turn persona.
+    hardware_profile: lite
+
+  - id: mistral-7b-instruct-2023
+    display_year: 2023
+    display_name: Mistral 7B Instruct v0.2
+    release_date: "2023-12-11"
+    mode: chat
+    source:
+      repository: mistralai/Mistral-7B-Instruct-v0.2
+      revision: 3ad36be9f89496bc48174003c1e80f6b8dd62d21
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2
+    backend: local_quantized
+    precision: q4_k_m
+    adapter_id: chat-mistral-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Quantization may change outputs versus a full-precision reference.
+      - Short context compared to frontier APIs.
+      - Can still hallucinate or refuse inconsistently.
+    hardware_profile: standard
+
+  - id: qwen25-7b-instruct-2024
+    display_year: 2024
+    display_name: Qwen2.5 7B Instruct
+    release_date: "2024-09-19"
+    mode: chat
+    source:
+      repository: Qwen/Qwen2.5-7B-Instruct
+      revision: 41df7d9264de62fb91fbc53d5e864c73c9584347
+      artifact_filename: model.safetensors
+      sha256: record-at-preload
+    license_url: https://huggingface.co/Qwen/Qwen2.5-7B-Instruct
+    backend: local_quantized
+    precision: q4_k_m
+    adapter_id: chat-qwen-v1
+    adapter_version: "1"
+    input_limit_chars: 900
+    generation_profile_id: local-v1
+    limitations:
+      - Quantized local artifact; not identical to API weights.
+      - Not a verified 2024 frontier model.
+      - Safety and instruction quality are uneven on hard prompts.
+    hardware_profile: standard

@@ -1,0 +1,31 @@
+# Pinned local judge for local-v2-eval.
+# Prefer a judge that is NOT the status-quo ("today") display slot.
+# Default here: FLAN-T5 Large (2022 instruction-tuned) — already on the 16GB host.
+# Limitation: smaller than an ideal judge; scores are coarse estimates only.
+id: judge-flan-v1
+protocol: local-v2-eval
+rubric_id: judge-rubric-v1
+judge_model_id: flan-t5-large-2022
+judge_display_name: "FLAN-T5 Large (judge role)"
+judge_revision: "0613663d0d48ea86ba8cb3d7a44f0f65dc596a2a"
+adapter_id: instruction-v1
+adapter_version: "1"
+backend: transformers
+# Reuse the historical checkpoint artifact; role is judge-only when scoring.
+artifact_from_model_id: flan-t5-large-2022
+generation_profile_id: local-v2-judge
+generation_profiles:
+  local-v2-judge:
+    id: local-v2-judge
+    max_new_tokens: 64
+    temperature: 0.0
+    top_p: 1.0
+    seed: 20260923
+    retries: 0
+    tools_enabled: false
+    network_enabled: false
+limitations:
+  - Judge is an estimate under judge-rubric-v1, not ground truth.
+  - Default judge is FLAN-T5 Large — coarser than a large frontier judge.
+  - Prefer swapping to a dedicated non-status-quo judge when disk allows.
+  - Unverifiable private facts must yield UNSCORED, never a forced number.
