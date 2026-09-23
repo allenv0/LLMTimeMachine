@@ -1,16 +1,16 @@
 # What is still not in the product
 
-**As of:** 2026-09-23 (after local-v1 demo + Phase A diary/curves + Phase B local-v2-eval judge)  
+**As of:** 2026-09-23 (after Wave 1–3 of `docs/plan-full-idea.md`: decade spine, local-v3 diary, judge v2, packs, chat, FUTURE)  
 **Compared to:** `idea.md` — *LLM Time Travel Visualization Proposal*  
-**Honest summary:** The **core teaching loop** is in. The **full proposal** is not.
+**Honest summary:** The **individual-delivery path** (WS1–WS6) is implemented. The **public outreach product** (`cloud-v1`) is not.
 
-Use this list when talking to users, funders, or teammates. Do **not** claim full `idea.md` delivery.
+Use this list when talking to users, funders, or teammates. Do **not** claim full public `idea.md` outreach delivery.
 
 ---
 
 ## Accurate claim (safe wording)
 
-> A local, auditable demo of the LLM time-travel idea: feel progress on your own prompts with frozen historical stand-ins. It is not the full decade of frontier models, not automatic ground-truth ranking, and not a global progress study.
+> A local, auditable LLM time-travel demo: year-by-year spine with visible holes, your weird prompts, human + opt-in judge curves, offline pack overlay, and a multi-turn playground. It is not a verified annual frontier lineup, not ground-truth ranking, and not a global progress study.
 
 Aligned with the product truthful claim:
 
@@ -22,68 +22,35 @@ Aligned with the product truthful claim:
 
 | # | What `idea.md` proposes | What the product has today | Gap type |
 |---|---|---|---|
-| 1 | **Best surviving LLM from every year** over the past decade (~2015–2026) | Five laptop-era **stand-ins** (2019 GPT-2, 2021 GPT-2 Medium, 2022 FLAN-T5 Large, 2023 Mistral-7B Q4, 2024 Qwen2.5-7B Q4) + optional empty-slot thinking in plans | **Coverage / fidelity** |
-| 2 | **Automatic quality ranking** of every response (e.g. 1–10) | (A) Human −2..+2 ordinal + usefulness; (B) **opt-in** local judge estimate (`local-v2-eval`), often `UNSCORED`; never auto on trip | **Partial — not automatic, not ground truth** |
-| 3 | Graph of **this prompt’s improvement over time** | Personal ordinal curve + estimated judge curve (gaps stay gaps) | **Mostly there (Track A/B)** |
-| 4 | Compare that to **global improvement over time** (density of all curves) | **Local portfolio only** (your diary prompts). No global / crowd / published density | **Missing — G2 full form** |
-| 5 | Anti-cherrypicking via **direct comparison** on **user-chosen** prompts | Strong: free text, frozen cohort, audit drawers, blind A–E | **Delivered** |
-| 6 | **Live through the decade** year after year; see when a release **first solved** it | Diary + first-solved + **simulated** decade walk with reflections | **Partial — simulation, not calendar time** |
-| 7 | **Diverse weird prompts**, pre-registered, revisited regularly | Starter prompts + diary pre-registration; no scheduled portfolio regimen | **Partial** |
-| 8 | Chatbot **playground** (“fire up a checkpoint and talk to it”) | One-shot **trips** (compare modes) + decade walk; **no multi-turn chat** with one year | **Missing — G5** |
-| 9 | **Status-quo endpoint** = best available model today | Timeline ends at 2024 Qwen 7B Q4 (labeled stand-in) | **Missing / constrained** |
-| 10 | Optional **“future”** best-of-n extrapolating model | Not built | **Missing — G6** |
-| 11 | **Public corpus** of prompts/responses (abuse-dependent) | Local-only by design; export for the user | **Out of scope for local-v1** |
-| 12 | **Email** semi-annual re-runs when new models land | Not built (local stub only in plan) | **Missing — G7** |
-| 13 | **Public multi-user outreach** (labs / nonprofit / arena-scale) | Single-user Streamlit on `127.0.0.1` | **Different product — cloud-v1** |
-
----
-
-## Detail on the important gaps
-
-### 1. Decade coverage is not the decade
-
-`idea.md` lists roughly: 2015 char-RNN · 2016 LM1B · 2018 GPT-1 · 2019 GPT-2 1.5B · 2020 GPT-3 · 2021 GPT-J 6B · 2022 FLAN-T5 XXL / GLM-130B · 2023 Qwen-72B-Chat · 2024 DeepSeek-V3 · 2025–2026 frontier.
-
-We ship **five hardware-fit slots** with **disclosed substitutions** (e.g. GPT-2 Medium stands in for GPT-J-class; Q4 GGUF 7Bs stand in for large open chat). Missing years are not empty UI nodes yet — they are simply absent.
-
-**Never say:** “the best model of each year.”  
-**Always say:** “laptop-compatible sample / stand-ins.”
-
-### 2. Automatic ranking is estimated and opt-in
-
-- Track A: **your** ordinal — honest, sparse, subjective.  
-- Track B: local judge under `judge-rubric-v1` + FLAN-T5 Large in judge role — **experimental banner required**, refuse-to-score on unverifiable private facts. Real runs often return `UNSCORED`.  
-- No silent judge on trips. No claimed ground truth. No merge of human and machine lines without labels.
-
-`idea.md`’s “best available model grades each response 1–10” is **not** fully realized.
-
-### 3. Global improvement overlay is absent
-
-Without a corpus of many users’ (or a published pack of) quality curves, we cannot draw the density plot that answers “am I being cherrypicked?” We only show **your** portfolio (and only with a band at n≥5).
-
-### 4. Longitudinal “solved it over years” is simulated
-
-Decade walk reveals one year at a time with reflection pauses — useful theater over real checkpoints — but it is **not** waiting for new model releases over calendar years, and there is no hosted re-run/email loop.
-
-### 5. Playground vs trips
-
-The pitch’s “talk to it” is unmet: no multi-turn session against GPT-2 or Mistral with visible historical adapters per turn.
+| 1 | **Best surviving LLM from every year** over the past decade | **Decade spine** `decade-v0` with visible holes (2015/16/18/20/25/26) + labeled substitutes (2019 GPT-2 available; 2021–2024 stand-ins) | **Partial — holes + substitutes, not verified frontier** |
+| 2 | **Automatic quality ranking** 1–10 | Opt-in local judge (`local-v2-eval`, rubric v2 JSON, cache, refuse-to-score) + human −2..+2 | **Partial — estimate, not ground truth** |
+| 3 | Graph of **this prompt’s improvement over time** | Human curve + estimated judge curve (gaps stay gaps) | **Delivered (Track A/B)** |
+| 4 | Compare to **global improvement** (density of all curves) | **Offline curve packs** + demonstration pack overlay (median/IQR, min-n). No live multi-user corpus | **Partial — pack stand-in, not live global** |
+| 5 | Anti-cherrypicking via **user-chosen** prompts | Free text, frozen cohort, audit drawers, blind A–E | **Delivered** |
+| 6 | **Live through the decade**; see when a release **first solved** it | Diary re-run + first-solved timeline + simulated decade walk | **Partial — re-run ≠ calendar years; no email** |
+| 7 | **Diverse weird prompts**, pre-registered, revisited | Diary pre-register + explicit re-run + .ics stub | **Partial — no scheduled regimen** |
+| 8 | Chatbot **playground** | **Multi-turn chat** with visible historical adapters + per-turn audit | **Delivered (WS5)** |
+| 9 | **Status-quo endpoint** | Labeled `status_quo` slot (Qwen 2024 stand-in for today) | **Delivered as labeled stand-in** |
+| 10 | Optional **“future”** best-of-n | `FutureEnsemble` best-of-n; **off by default**; quarantined | **Delivered as optional synthetic** |
+| 11 | **Public corpus** of prompts/responses | Local-only + export; demonstration pack is synthetic | **Missing — cloud-v1** |
+| 12 | **Email** semi-annual re-runs | Local `.ics` stub only | **Missing — cloud-v1** |
+| 13 | **Public multi-user outreach** | Single-user Streamlit on `127.0.0.1` | **Missing — cloud-v1** |
 
 ---
 
 ## What *is* solid (do not undersell)
 
-- Private, user-chosen prompts (the idiosyncratic conviction mechanism in `idea.md`)
-- Frozen cohort, pinned revisions, visible adapters, full audit trail
-- Chronological reveal + quick base→instruction→chat progress arc
-- Blind compare, personal annotations, local export/delete
-- Honesty protocol (`PROTOCOL.md`, `PROTOCOL-local-v2-eval.md`, decision log)
-- Diary: pre-register, link trips, first-solved, reflections
-- Personal quality curves with honest gaps
-- Opt-in estimated scores with refuse-to-score and full judge I/O audit
+- Decade spine with **visible holes** and labeled substitutes (`stands_for`)
+- Status-quo endpoint + optional quarantined FUTURE (off by default)
+- Private prompts, frozen cohort, pins, full audit trail
+- Diary schema v2, explicit re-run, first-solved timeline
+- Human ordinal curves + opt-in judge (rubric v2 JSON, cache, refuse)
+- Offline curve packs + overlay with honest n/caveat (demo pack labeled synthetic)
+- Multi-turn playground with visible adapters (no hidden chat glue on 2019)
+- Calibration bias report (never rewrites scores)
 
 ---
 
 ## One-line verdict
 
-**Core idea delivered as a local demo; full `idea.md` not delivered** — missing true decade/frontier coverage, automatic ground-truth ranking, global density comparison, chat playground, future model, and all hosted outreach features (corpus, email, multi-user).
+**Individual idea.md delivery is in (WS1–WS6); public outreach (WS7 cloud corpus/email/live density) is not.**

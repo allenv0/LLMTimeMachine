@@ -31,7 +31,11 @@ BANNER = (
 
 
 class JudgeService:
-    """Scores completed trip outputs with a pinned local judge + visible rubric."""
+    """Scores completed trip outputs with a pinned local judge + visible rubric.
+
+    Prefers dedicated stage-B1 pin (judge-v2 / rubric-v2) when present.
+    Scores are cached by (judge_model_id, rubric_id, judge_prompt_sha256).
+    """
 
     def __init__(
         self,
@@ -43,8 +47,19 @@ class JudgeService:
         self.paths = paths
         self.factory = factory or RunnerFactory(model_cache=str(paths.model_cache_dir))
         jdir = paths.judges_registry_dir
-        self.judge_config_path = Path(judge_config_path or jdir / "judge-v1.yaml")
-        self.rubric_path = Path(rubric_path or jdir / "rubric-v1.yaml")
+        if judge_config_path is None:
+            v2 = jdir / "judge-v2.yaml"
+            judge_config_path = v2 if v2.is_file() else (jdir / "judge-v1.yaml")
+        if rubric_path is None:
+            # Align rubric with the selected judge pin when possible.
+            name = Path(judge_config_path).name
+            if "v2" in name:
+                candidate = jdir / "rubric-v2.yaml"
+                rubric_path = candidate if candidate.is_file() else (jdir / "rubric-v1.yaml")
+            else:
+                rubric_path = jdir / "rubric-v1.yaml"
+        self.judge_config_path = Path(judge_config_path)
+        self.rubric_path = Path(rubric_path)
         self._judge_cfg: dict | None = None
         self._rubric: dict | None = None
 
@@ -69,6 +84,40 @@ class JudgeService:
 
     def score_dir(self, trip_id: str, model_id: str) -> Path:
         return self.paths.judge_dir / trip_id / model_id
+
+    def cache_enabled(self) -> bool:
+        cache = self.judge_cfg.get("cache") or {}
+        return bool(cache.get("enabled", True))
+
+    def _cache_path(self, key: str) -> Path:
+        return self.paths.judge_cache_dir / f"{key}.json"
+
+    def _cache_key(self, judge_prompt_sha256: str) -> str:
+        judge_id = str(self.judge_cfg.get("id") or self.judge_cfg.get("judge_model_id"))
+        rubric_id = str(self.rubric.get("id"))
+        return f"{judge_id}__{rubric_id}__{judge_prompt_sha256}"
+
+    def read_cache(self, judge_prompt_sha256: str) -> dict | None:
+        if not self.cache_enabled():
+            return None
+        path = self._cache_path(self._cache_key(judge_prompt_sha256))
+        if not path.is_file():
+            return None
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            return None
+
+    def write_cache(self, judge_prompt_sha256: str, payload: dict) -> Path | None:
+        if not self.cache_enabled():
+            return None
+        self.paths.judge_cache_dir.mkdir(parents=True, exist_ok=True)
+        path = self._cache_path(self._cache_key(judge_prompt_sha256))
+        text = json.dumps(payload, indent=2, ensure_ascii=False) + "\n"
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(text, encoding="utf-8")
+        tmp.replace(path)
+        return path
 
     def _generation_config(self) -> GenerationConfig:
         profiles = self.judge_cfg.get("generation_profiles") or {}
@@ -124,6 +173,38 @@ class JudgeService:
         out_dir = self.score_dir(trip_id, run.model_id)
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / "judge-input.txt").write_text(prepared, encoding="utf-8")
+        prompt_sha = hash_judge_input(prepared)
+
+        cached = self.read_cache(prompt_sha)
+        if cached is not None:
+            (out_dir / "judge-output.txt").write_text(
+                str(cached.get("judge_output") or ""), encoding="utf-8"
+            )
+            status = str(cached.get("status") or "unscored")
+            score = cached.get("score_1_10")
+            reason = str(cached.get("unscored_reason") or "")
+            record = JudgeScore(
+                **base,
+                status=status,
+                score_1_10=score,
+                unscored_reason=reason,
+                judge_prompt_sha256=prompt_sha,
+                judge_input_path="judge-input.txt",
+                judge_output_path="judge-output.txt",
+            )
+            (out_dir / "score.json").write_text(
+                json.dumps(record.model_dump(mode="json"), indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+            (out_dir / "cache-hit.json").write_text(
+                json.dumps({"cache_key": self._cache_key(prompt_sha)}, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            (out_dir / "generation.json").write_text(
+                json.dumps(self._generation_config().model_dump(mode="json"), indent=2) + "\n",
+                encoding="utf-8",
+            )
+            return record
 
         try:
             result = self._generate(prepared)
@@ -140,13 +221,24 @@ class JudgeService:
 
         (out_dir / "judge-output.txt").write_text(result, encoding="utf-8")
         status, score, reason = parse_judge_reply(result)
+        self.write_cache(
+            prompt_sha,
+            {
+                "status": status,
+                "score_1_10": score,
+                "unscored_reason": reason,
+                "judge_output": result,
+                "judge_model_id": judge_model_id,
+                "rubric_id": str(rubric.get("id")),
+            },
+        )
         # Write full score record
         record = JudgeScore(
             **base,
             status=status,
             score_1_10=score,
             unscored_reason=reason,
-            judge_prompt_sha256=hash_judge_input(prepared),
+            judge_prompt_sha256=prompt_sha,
             judge_input_path="judge-input.txt",
             judge_output_path="judge-output.txt",
         )

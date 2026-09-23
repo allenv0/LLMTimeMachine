@@ -240,3 +240,64 @@ None.
 
 Local demo implementation
 
+## 2026-09-23 — Wave 1 freeze: local-v3-longitudinal + decade-v0 + rubric v2
+
+**Decision:**
+
+Freeze Wave 1 from `docs/plan-full-idea.md` for individual delivery (WS1 partial + WS2 B1 + WS4 local):
+
+1. Write `PROTOCOL-local-v3-longitudinal.md` (diary re-run semantics, versioned diary index, offline curve packs).
+2. Ship `registry/cohort-decade-v0.yaml` with **visible holes** (2015/2016/2018/2020/2025/2026), labeled `substitute` slots (`stands_for`), and a **status-quo** endpoint (not a fake year).
+3. Upgrade judge to **rubric v2 JSON contract** + dedicated pin `judge-v2.yaml` + cache keyed by `(judge, rubric, judge_prompt_sha256)`.
+4. Diary re-run (explicit tour/full) + first-solved timeline across entries.
+5. Validation matrix filled from real hardware evidence on this host.
+
+**Alternatives considered:**
+
+- Skip holes and keep only five running models (rejected: idea.md year-by-year fidelity requires empty nodes with reasons).
+- Fake a 2020 GPT-3 slot with a local stand-in (rejected: silent substitution).
+- Auto re-run diary on every app start (rejected: local-v3 forbids silent re-run).
+- Free-text judge forever (rejected: JSON contract cuts parse failures; refuse still preferred over invent).
+
+**Evidence:**
+
+`docs/plan-full-idea.md` §4 Wave 1 and §9 immediate actions. Gate W1: non-builder completes trip, rates, sees human + estimated curves, marks first-solve, re-runs diary after a new year slot appears.
+
+**Impact on protocol/cohort:**
+
+`local-v1` frozen and unchanged for trip generation. `local-v3-longitudinal` is an additive appendix. New cohort id `decade-v0`. Judge track stays `local-v2-eval` with new `judge-rubric-v2` / `judge-flan-v2` (scores not comparable across rubric versions).
+
+**Owner:**
+
+Local demo implementation
+
+## 2026-09-23 — Wave 2+3: packs, chat playground, FUTURE quarantine
+
+**Decision:**
+
+Complete the individual-delivery path (WS1–WS6) under `local-v3-longitudinal` + existing `local-v2-eval`:
+
+1. **WS3 pack overlay:** `curves_pack.py` + `curves-pack-v1` schema, version gate, min-n band, demonstration pack (32 synthetic curves, labeled `pack_kind: demonstration`), compare-pack export.
+2. **WS2 calibration:** `judge_calibration.py` gold set + bias report (never rewrites scores).
+3. **WS5 playground:** `chat_session.py` multi-turn with visible `continuation-transcript-v1` / `instruction-flat-transcript-v1` / native chat multi adapters; per-turn audit; export.
+4. **WS6 FUTURE:** `future_ensemble.py` best-of-n across members × seeds; off by default; quarantined; cannot mark first-solved without opt-in.
+
+**Alternatives considered:**
+
+- Claim the demonstration pack is empirical global progress (rejected: dishonest density).
+- Wrap GPT-2 in modern chat glue for the playground (rejected: hides history).
+- Auto-enable FUTURE on the decade spine (rejected: novelty vs credibility).
+- Silent judge calibration “fix” of scores (rejected: report bias only).
+
+**Evidence:**
+
+`tests/test_wave_idea_full.py` (holes, diary v2, judge cache, pack gate, chat turn-2 contains turn-1, FUTURE quarantine). Full suite green after Wave 1–3. Gate W2/W3 for individual delivery: overlay caveat + playground audit + unmistakable FUTURE labels.
+
+**Impact on protocol/cohort:**
+
+`local-v1` unchanged. `local-v3-longitudinal` + `local-v2-eval` carry packs/chat/future. Demonstration packs are never “global LLM progress.”
+
+**Owner:**
+
+Local demo implementation
+

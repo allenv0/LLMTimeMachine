@@ -19,8 +19,10 @@ from time_machine import __version__
 from time_machine.artifact_store import ArtifactStore
 from time_machine.config import APP_NAME, default_paths, debug_content_enabled
 from time_machine.cohort_catalog import CohortCatalog
+from time_machine.chat_session import ChatService, ChatStore
 from time_machine.curves import build_trip_curve, write_curve
 from time_machine.diary import DiaryStore
+from time_machine.diary_rerun import DiaryRerunService
 from time_machine.domain import UserAnnotations
 from time_machine.evaluation_human import HumanCurveEvaluator
 from time_machine.evaluation_judge import JudgeService
@@ -29,16 +31,20 @@ from time_machine.trip_controller import TripController
 from time_machine.runners.factory import RunnerFactory
 from time_machine.ui import (
     blind_compare,
+    chat as chat_ui,
     curves as curves_ui,
     decade_walk as decade_walk_ui,
     diary as diary_ui,
+    diary_rerun as diary_rerun_ui,
     judge as judge_ui,
     landing,
     local_data,
+    pack_overlay as pack_overlay_ui,
     prompt_form,
     progress,
     quick_tour,
     results,
+    timeline as timeline_ui,
 )
 
 st.set_page_config(page_title=APP_NAME, page_icon="⏳", layout="wide")
@@ -56,7 +62,9 @@ def load_static():
     factory = RunnerFactory(model_cache=str(paths.model_cache_dir))
     diary = DiaryStore(paths)
     judge = JudgeService(paths=paths, factory=factory)
-    return paths, catalog, cohort, store, factory, diary, judge
+    chat_store = ChatStore(paths)
+    chat = ChatService(chat_store, factory, cohort)
+    return paths, catalog, cohort, store, factory, diary, judge, chat_store, chat
 
 
 def _controller(store, factory, cohort, paths, kind: str) -> TripController:
@@ -84,7 +92,7 @@ def _save_curve(paths, store, cohort, trip_id: str, annotations: UserAnnotations
 
 
 def main() -> None:
-    paths, catalog, cohort, store, factory, diary, judge = load_static()
+    paths, catalog, cohort, store, factory, diary, judge, chat_store, chat = load_static()
 
     if debug_content_enabled():
         st.warning("Development content logging is enabled (TIME_MACHINE_DEBUG_CONTENT).")
@@ -93,8 +101,9 @@ def main() -> None:
     if cohort.cohort_id != "local-v1":
         st.warning(
             f"**Limitation banner:** active cohort is `{cohort.cohort_id}` "
-            "(hardware-profile substitute), not the standard `local-v1` five-model cohort."
+            "(hardware-profile substitute / decade spine), not the standard `local-v1` five-model cohort."
         )
+    timeline_ui.render_decade_spine(st, cohort)
 
     with st.sidebar:
         st.header("Session")
@@ -182,7 +191,7 @@ def main() -> None:
         if not trip_models:
             trip_models = list(cohort.models)
 
-        tab_results, tab_curve, tab_judge, tab_blind, tab_diary, tab_walk, tab_data = st.tabs(
+        tab_results, tab_curve, tab_judge, tab_blind, tab_diary, tab_walk, tab_chat, tab_data = st.tabs(
             [
                 "Results",
                 "Progress curve",
@@ -190,6 +199,7 @@ def main() -> None:
                 "Blind compare",
                 "Diary",
                 "Decade walk",
+                "Playground chat",
                 "Local data",
             ]
         )
@@ -205,7 +215,7 @@ def main() -> None:
                     n = _save_curve(paths, store, cohort, trip_id, updated)
                     st.success(f"Saved locally. Curve points: {n}.")
         with tab_curve:
-            curves_ui.render_trip_curve(st, cohort, manifest, annotations)
+            trip_points = curves_ui.render_trip_curve(st, cohort, manifest, annotations)
             # portfolio across diary-linked rated trips
             series = {}
             for e in diary.list():
@@ -220,6 +230,12 @@ def main() -> None:
                 if pts:
                     series[e.entry_id] = pts
             curves_ui.render_portfolio(st, series)
+            pack_overlay_ui.render_pack_overlay(
+                st,
+                paths,
+                my_points=[p.model_dump(mode="json") for p in trip_points],
+                trip_id=trip_id,
+            )
         with tab_judge:
             scores = judge_ui.render_score_action(st, judge, store, manifest)
             if scores:
@@ -236,6 +252,9 @@ def main() -> None:
             diary_ui.render_diary_panel(
                 st, diary, active_trip_id=trip_id, raw_prompt=raw
             )
+            rerun = DiaryRerunService(diary, controller, cohort)
+            diary_rerun_ui.render_diary_rerun(st, rerun, diary)
+            diary_rerun_ui.render_first_solved_timeline(st, rerun.first_solved_timeline())
         with tab_walk:
             decade_walk_ui.render_decade_walk(
                 st,
@@ -244,12 +263,24 @@ def main() -> None:
                 controller=controller,
                 hardware_summary=hardware_summary(paths),
             )
+        with tab_chat:
+            chat_ui.render_chat_panel(st, chat, chat_store, cohort)
         with tab_data:
             local_data.render_local_data_panel(st, store, trip_id=trip_id)
     else:
-        tab_diary, tab_walk, tab_data = st.tabs(["Diary", "Decade walk", "Local data"])
+        tab_spine, tab_diary, tab_walk, tab_chat, tab_data = st.tabs(
+            ["Decade spine", "Diary", "Decade walk", "Playground chat", "Local data"]
+        )
+        with tab_spine:
+            timeline_ui.render_decade_spine(st, cohort)
         with tab_diary:
             diary_ui.render_diary_panel(st, diary, active_trip_id=None, raw_prompt="")
+            walk_controller = _controller(
+                store, factory, cohort, paths, st.session_state.get("runner_mode", "fake")
+            )
+            rerun = DiaryRerunService(diary, walk_controller, cohort)
+            diary_rerun_ui.render_diary_rerun(st, rerun, diary)
+            diary_rerun_ui.render_first_solved_timeline(st, rerun.first_solved_timeline())
         with tab_walk:
             walk_controller = _controller(store, factory, cohort, paths, st.session_state.get("runner_mode", "fake"))
             decade_walk_ui.render_decade_walk(
@@ -259,6 +290,8 @@ def main() -> None:
                 controller=walk_controller,
                 hardware_summary=hardware_summary(paths),
             )
+        with tab_chat:
+            chat_ui.render_chat_panel(st, chat, chat_store, cohort)
         with tab_data:
             local_data.render_local_data_panel(st, store, trip_id=None)
 

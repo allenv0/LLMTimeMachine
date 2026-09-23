@@ -112,6 +112,51 @@ def _validate_semantics(
             raise RegistryError(f"{model.id}: license_url is required")
         if not model.source.repository or not model.source.revision:
             raise RegistryError(f"{model.id}: source repository/revision required")
+        if model.slot_status == "substitute" and not model.stands_for:
+            raise RegistryError(f"{model.id}: substitute slots must set stands_for")
+
+    _validate_timeline(cohort)
+
+
+def _validate_timeline(cohort: Cohort) -> None:
+    """Decade spine: holes never collide with models; endpoints resolve."""
+    model_years = {m.display_year for m in cohort.models}
+    hole_years = [h.display_year for h in cohort.timeline_holes]
+    if len(set(hole_years)) != len(hole_years):
+        raise RegistryError(f"timeline_holes years must be unique: {hole_years}")
+    for h in cohort.timeline_holes:
+        if h.display_year in model_years:
+            raise RegistryError(
+                f"timeline hole {h.display_year} collides with a model display_year"
+            )
+        if not h.reason.strip():
+            raise RegistryError(f"timeline hole {h.display_year}: reason required")
+    # Combined spine years must be strictly ascending when interleaved by year.
+    spine = sorted(
+        [(m.display_year, "model", m.id) for m in cohort.models]
+        + [(h.display_year, "hole", str(h.display_year)) for h in cohort.timeline_holes]
+    )
+    years_only = [y for y, _, _ in spine]
+    if years_only != sorted(years_only):
+        raise RegistryError("timeline spine years must sort")
+    if len(set(years_only)) != len(years_only):
+        raise RegistryError(f"duplicate years on timeline spine: {years_only}")
+
+    if cohort.status_quo is not None:
+        ids = {m.id for m in cohort.models}
+        if cohort.status_quo.model_id not in ids:
+            raise RegistryError(
+                f"status_quo.model_id {cohort.status_quo.model_id!r} not in cohort models"
+            )
+    if cohort.future is not None and cohort.future.enabled:
+        ids = {m.id for m in cohort.models}
+        for mid in cohort.future.member_model_ids:
+            if mid not in ids:
+                raise RegistryError(f"future.member_model_id {mid!r} not in cohort models")
+        if not cohort.future.selection_rule.strip():
+            raise RegistryError("future.enabled requires a frozen selection_rule")
+        if not cohort.future.member_model_ids:
+            raise RegistryError("future.enabled requires member_model_ids")
 
 
 def load_cohort(path: Path | str) -> Cohort:

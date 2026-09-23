@@ -1,4 +1,8 @@
-"""Prompt diary: pre-registered private prompts, trips, first-solved, reflections."""
+"""Prompt diary: pre-registered private prompts, trips, first-solved, reflections.
+
+Schema v2 (local-v3-longitudinal): versioned index + reruns. Migrations never
+rewrite raw-prompt.txt. Full prompt text lives only in raw-prompt.txt.
+"""
 
 from __future__ import annotations
 
@@ -10,10 +14,16 @@ from uuid import uuid4
 
 from time_machine.artifact_store import sha256_text
 from time_machine.config import AppPaths
-from time_machine.domain import DiaryTripRef, PromptDiaryEntry, utc_now_iso
+from time_machine.domain import (
+    DiaryRerunRef,
+    DiaryTripRef,
+    PromptDiaryEntry,
+    utc_now_iso,
+)
 from time_machine.errors import ArtifactError
 
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+INDEX_SCHEMA_VERSION = "2"
 
 
 class DiaryStore:
@@ -43,22 +53,57 @@ class DiaryStore:
             raise ArtifactError("diary path escapes prompts root")
         return candidate
 
-    def _load_index(self) -> list[dict]:
+    def _load_index(self) -> dict:
         path = self.paths.diary_index_path
         if not path.is_file():
-            return []
+            return {"schema_version": INDEX_SCHEMA_VERSION, "migrated_at": None, "entries": []}
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             raise ArtifactError(f"corrupt diary index: {exc}") from exc
-        if not isinstance(data, list):
-            raise ArtifactError("diary index must be a list")
+        original_is_v1_list = isinstance(data, list)
+        index = self._migrate_index(data)
+        # Persist migration so later readers see schema v2.
+        if original_is_v1_list or str(index.get("schema_version")) != INDEX_SCHEMA_VERSION:
+            self._save_index(index)
+        elif not path.is_file():
+            self._save_index(index)
+        return index
+
+    def _migrate_index(self, data: object) -> dict:
+        """Deterministic migration. Bare list = schema v1. Never touches raw prompts."""
+        if isinstance(data, list):
+            return {
+                "schema_version": INDEX_SCHEMA_VERSION,
+                "migrated_at": utc_now_iso(),
+                "entries": data,
+            }
+        if not isinstance(data, dict):
+            raise ArtifactError("diary index must be a list (v1) or object (v2)")
+        entries = data.get("entries")
+        if entries is None:
+            raise ArtifactError("diary index missing entries")
+        if not isinstance(entries, list):
+            raise ArtifactError("diary index entries must be a list")
+        version = str(data.get("schema_version") or "1")
+        if version != INDEX_SCHEMA_VERSION:
+            data = dict(data)
+            data["schema_version"] = INDEX_SCHEMA_VERSION
+            data["migrated_at"] = utc_now_iso()
+            # Ensure reruns field exists on every entry (additive).
+            migrated = []
+            for row in entries:
+                if isinstance(row, dict) and "reruns" not in row:
+                    row = dict(row)
+                    row["reruns"] = []
+                migrated.append(row)
+            data["entries"] = migrated
         return data
 
-    def _save_index(self, entries: list[dict]) -> None:
+    def _save_index(self, index: dict) -> None:
         self._ensure()
         path = self.paths.diary_index_path
-        text = json.dumps(entries, indent=2, ensure_ascii=False) + "\n"
+        text = json.dumps(index, indent=2, ensure_ascii=False) + "\n"
         tmp = path.with_suffix(".json.tmp")
         tmp.write_text(text, encoding="utf-8")
         tmp.replace(path)
@@ -97,14 +142,12 @@ class DiaryStore:
             tags=list(tags or []),
             success_criterion=success_criterion or "",
             trips=[],
+            reruns=[],
             preview=preview,
         )
         if trip_id:
             entry.trips.append(DiaryTripRef(trip_id=trip_id, created_at=utc_now_iso()))
         self._write_entry(entry)
-        items = self._load_index()
-        items.append(entry.model_dump(mode="json"))
-        self._save_index(items)
         return entry
 
     def _write_entry(self, entry: PromptDiaryEntry) -> None:
@@ -116,15 +159,17 @@ class DiaryStore:
         tmp.write_text(text, encoding="utf-8")
         tmp.replace(path)
         # keep index row in sync
-        items = self._load_index()
-        items = [e for e in items if e.get("entry_id") != entry.entry_id]
+        index = self._load_index()
+        items = [e for e in index.get("entries") or [] if e.get("entry_id") != entry.entry_id]
         items.append(entry.model_dump(mode="json"))
         items.sort(key=lambda e: e.get("created_at") or "")
-        self._save_index(items)
+        index["entries"] = items
+        index["schema_version"] = INDEX_SCHEMA_VERSION
+        self._save_index(index)
 
     def list(self) -> list[PromptDiaryEntry]:
         out = []
-        for row in self._load_index():
+        for row in self._load_index().get("entries") or []:
             try:
                 out.append(PromptDiaryEntry.model_validate(row))
             except Exception:
@@ -148,6 +193,32 @@ class DiaryStore:
         if any(t.trip_id == trip_id for t in entry.trips):
             return entry
         entry.trips.append(DiaryTripRef(trip_id=trip_id, created_at=utc_now_iso(), note=note))
+        self._write_entry(entry)
+        return entry
+
+    def record_rerun(
+        self,
+        entry_id: str,
+        trip_id: str,
+        *,
+        mode: str = "full",
+        cohort_id: str = "",
+    ) -> PromptDiaryEntry:
+        if mode not in {"tour", "full"}:
+            raise ArtifactError(f"unknown diary rerun mode: {mode}")
+        entry = self.get(entry_id)
+        entry.reruns.append(
+            DiaryRerunRef(
+                trip_id=trip_id,
+                created_at=utc_now_iso(),
+                mode=mode,
+                cohort_id=cohort_id,
+            )
+        )
+        if not any(t.trip_id == trip_id for t in entry.trips):
+            entry.trips.append(
+                DiaryTripRef(trip_id=trip_id, created_at=utc_now_iso(), note=f"re-run:{mode}")
+            )
         self._write_entry(entry)
         return entry
 
@@ -192,8 +263,41 @@ class DiaryStore:
         edir = self.entry_dir(entry_id)
         if edir.exists():
             shutil.rmtree(edir)
-        items = [e for e in self._load_index() if e.get("entry_id") != entry_id]
-        self._save_index(items)
+        index = self._load_index()
+        index["entries"] = [
+            e for e in index.get("entries") or [] if e.get("entry_id") != entry_id
+        ]
+        self._save_index(index)
 
     def find_by_prompt_hash(self, raw_prompt_sha256: str) -> list[PromptDiaryEntry]:
         return [e for e in self.list() if e.raw_prompt_sha256 == raw_prompt_sha256]
+
+    def first_solved_timeline(self, model_years: dict[str, int] | None = None) -> list[dict]:
+        """Portfolio timeline of first-solved marks. Gaps stay gaps.
+
+        ``model_years`` maps model_id → display_year when known, so the UI can
+        show the year of the solving checkpoint.
+        """
+        model_years = model_years or {}
+        rows: list[dict] = []
+        for entry in self.list():
+            year = None
+            if entry.first_solved_model_id:
+                year = model_years.get(entry.first_solved_model_id)
+            rows.append(
+                {
+                    "entry_id": entry.entry_id,
+                    "preview": entry.preview,
+                    "created_at": entry.created_at,
+                    "first_solved_model_id": entry.first_solved_model_id,
+                    "first_solved_year": year,
+                    "first_solved_trip_id": entry.first_solved_trip_id,
+                    "first_solved_at": entry.first_solved_at,
+                    "solved_mark": entry.solved_mark,
+                    "n_trips": len(entry.trips),
+                    "n_reruns": len(entry.reruns),
+                    "tags": list(entry.tags),
+                }
+            )
+        rows.sort(key=lambda r: r.get("created_at") or "")
+        return rows

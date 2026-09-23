@@ -118,6 +118,26 @@ class AppPaths(BaseModel):
     def judges_registry_dir(self) -> Path:
         return self.root / "registry" / "judges"
 
+    @property
+    def chats_dir(self) -> Path:
+        return (self.local_data_dir / "chats").resolve()
+
+    @property
+    def curve_packs_dir(self) -> Path:
+        return (self.local_data_dir / "curve-packs").resolve()
+
+    @property
+    def curve_packs_registry_dir(self) -> Path:
+        return self.root / "registry" / "curve-packs"
+
+    @property
+    def judge_cache_dir(self) -> Path:
+        return (self.local_data_dir / "judge-cache").resolve()
+
+    @property
+    def judge_calibration_dir(self) -> Path:
+        return (self.local_data_dir / "judge-calibration").resolve()
+
 
 def default_paths(root: Path | None = None) -> AppPaths:
     root_path = root or Path(os.environ.get("TIME_MACHINE_ROOT", Path.cwd()))

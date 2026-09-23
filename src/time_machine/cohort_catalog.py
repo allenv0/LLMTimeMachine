@@ -65,8 +65,9 @@ class CohortCatalog:
         return self.load_file(cohort_id_or_path)
 
     def default_cohort(self) -> Cohort:
-        """Prefer five-era, then local-v1, then lite, then first available."""
+        """Prefer decade spine, then five-era, then local-v1, then lite."""
         preferred = [
+            "cohort-decade-v0.yaml",
             "cohort-five-era-v1.yaml",
             "cohort-local-v1.yaml",
             "cohort-lite-v1.yaml",

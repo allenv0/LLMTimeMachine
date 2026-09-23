@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-from typing import Any
+from typing import Any, Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
 
 from time_machine.config import (
     FAILURE_TAG_VALUES,
+    PROTOCOL_VERSION,
     SCHEMA_VERSION,
     BackendLiteral,
     HardwareProfileLiteral,
@@ -21,6 +22,42 @@ from time_machine.config import (
 
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+SlotStatusLiteral = Literal["available", "substitute", "hole", "status_quo", "future"]
+
+
+class YearHole(BaseModel):
+    """Visible empty year on the decade spine. Never zero-filled into a fake model."""
+
+    display_year: int
+    target_class: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    slot_status: Literal["hole"] = "hole"
+
+
+class StatusQuoSlot(BaseModel):
+    """Labeled endpoint for 'today' — not a fake calendar year."""
+
+    model_id: str = Field(min_length=1)
+    display_name: str = "Status quo (today)"
+    note: str = Field(min_length=1)
+    slot_status: Literal["status_quo"] = "status_quo"
+
+
+class FutureSlot(BaseModel):
+    """Optional quarantined FUTURE best-of-n. Off by default. Never a year slot."""
+
+    enabled: bool = False
+    display_name: str = "FUTURE (synthetic)"
+    method: str = "best-of-n-seeds"
+    member_model_ids: list[str] = Field(default_factory=list)
+    selection_rule: str = ""
+    n_seeds: int = Field(default=3, ge=1, le=16)
+    quarantine_note: str = (
+        "Synthetic extrapolation. Not a historical year. Cannot mark first-solved unless opted in."
+    )
+    slot_status: Literal["future"] = "future"
 
 
 class ModelSource(BaseModel):
@@ -92,6 +129,9 @@ class ModelSpec(BaseModel):
     generation_profile_id: str
     limitations: list[str] = Field(min_length=1)
     hardware_profile: HardwareProfileLiteral
+    # Decade spine fidelity (local-v3). available = run as named; substitute = labeled stand-in.
+    slot_status: Literal["available", "substitute"] = "available"
+    stands_for: str = ""
 
 
 class CohortPromptLimits(BaseModel):
@@ -107,6 +147,10 @@ class Cohort(BaseModel):
     generation_profile_id: str
     generation_profiles: dict[str, GenerationConfig]
     models: list[ModelSpec]
+    # Decade spine: visible holes + optional status-quo / future endpoints.
+    timeline_holes: list[YearHole] = Field(default_factory=list)
+    status_quo: StatusQuoSlot | None = None
+    future: FutureSlot | None = None
 
 
 class PreparedInput(BaseModel):
@@ -249,6 +293,13 @@ class DiaryTripRef(BaseModel):
     note: str = ""
 
 
+class DiaryRerunRef(BaseModel):
+    trip_id: str
+    created_at: str
+    mode: str = "full"  # tour | full
+    cohort_id: str = ""
+
+
 class PromptDiaryEntry(BaseModel):
     """Pre-registered private prompt the user can revisit over time (idea.md G4)."""
 
@@ -258,6 +309,7 @@ class PromptDiaryEntry(BaseModel):
     tags: list[str] = Field(default_factory=list)
     success_criterion: str = ""
     trips: list[DiaryTripRef] = Field(default_factory=list)
+    reruns: list[DiaryRerunRef] = Field(default_factory=list)
     first_solved_model_id: str | None = None
     first_solved_trip_id: str | None = None
     first_solved_at: str | None = None
@@ -280,6 +332,76 @@ class TripManifest(BaseModel):
     user_annotations: dict[str, Any] = Field(default_factory=dict)
     cancelled: bool = False
     complete: bool = False
+    # Set when this trip is a diary re-run (local-v3).
+    diary_entry_id: str | None = None
+    diary_rerun_mode: str | None = None  # tour | full
+    # Set when this trip synthesizes a FUTURE best-of-n (local-v3 / WS6).
+    future_synthetic: bool = False
+    future_selection_rule: str = ""
+
+
+class ChatTurn(BaseModel):
+    """One multi-turn chat exchange against a single historical checkpoint."""
+
+    turn_index: int = Field(ge=1)
+    role: Literal["user", "assistant"] = "user"
+    text: str
+    prepared_text: str = ""
+    adapter_id: str = ""
+    adapter_version: str = ""
+    prepared_input_path: str | None = None
+    output_path: str | None = None
+    created_at: str = Field(default_factory=utc_now_iso)
+    status: RunStatusLiteral = "completed"
+    error_message: str | None = None
+    runtime: RuntimeInfo | None = None
+    generation_seconds: float = 0.0
+
+
+class ChatSession(BaseModel):
+    """Playground chat: multi-turn against one year/model with visible adapters (WS5)."""
+
+    schema_version: str = SCHEMA_VERSION
+    session_id: str = Field(default_factory=lambda: str(uuid4()))
+    created_at: str = Field(default_factory=utc_now_iso)
+    model_id: str
+    display_year: int
+    display_name: str = ""
+    adapter_id: str
+    adapter_version: str
+    generation_profile_id: str
+    protocol_version: str = PROTOCOL_VERSION
+    turns: list[ChatTurn] = Field(default_factory=list)
+    derail_warning_shown: bool = False
+
+
+class CurvePackPoint(BaseModel):
+    year: int
+    score_1_10: int = Field(ge=1, le=10)
+    source: str = "judge_v2"
+
+
+class CurvePackCurve(BaseModel):
+    prompt_sha256: str = Field(min_length=1)
+    preview: str = ""
+    tags: list[str] = Field(default_factory=list)
+    points: list[CurvePackPoint] = Field(default_factory=list)
+
+
+class CurvePack(BaseModel):
+    """Frozen offline density pack (local-v3). Never writes back into user trips."""
+
+    pack_id: str = Field(min_length=1)
+    pack_kind: Literal["empirical", "demonstration"] = "empirical"
+    protocol: str = "local-v2-eval"
+    cohort_id: str = ""
+    judge_id: str = ""
+    rubric_id: str = ""
+    created_at: str = Field(default_factory=utc_now_iso)
+    method_note: str = ""
+    caveat: str = "Published sample, not all of LLM history."
+    schema_version: str = "curves-pack-v1"
+    curves: list[CurvePackCurve] = Field(default_factory=list)
 
 
 class ModelRunStatus:

@@ -47,6 +47,10 @@ def render_result_cards(
         with st.container(border=True):
             head = f"{year} · {name}"
             st.markdown(f"### {head}")
+            if spec is not None and getattr(spec, "slot_status", "available") == "substitute":
+                st.warning(
+                    f"SUBSTITUTE stand-in for {spec.stands_for or 'an annual frontier class'}"
+                )
             c1, c2, c3 = st.columns(3)
             c1.markdown(f"**{MODE_BADGE.get(mode, mode)}**")
             c2.markdown(f"Status: **{run.status}**")

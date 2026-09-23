@@ -1,0 +1,34 @@
+# Dedicated judge pin for local-v2-eval stage B1 (rubric v2 + cache).
+# Role-separated from the status-quo display slot (never Qwen "today").
+# On this 16GB host the dedicated judge reuses FLAN-T5 Large weights already staged;
+# swap artifact_from_model_id when a non-year-list mid-size instruct pin is available.
+id: judge-flan-v2
+protocol: local-v2-eval
+rubric_id: judge-rubric-v2
+judge_model_id: flan-t5-large-2022
+judge_display_name: "FLAN-T5 Large (dedicated judge role, rubric v2)"
+judge_revision: "0613663d0d48ea86ba8cb3d7a44f0f65dc596a2a"
+adapter_id: instruction-v1
+adapter_version: "1"
+backend: transformers
+artifact_from_model_id: flan-t5-large-2022
+generation_profile_id: local-v2-judge
+generation_profiles:
+  local-v2-judge:
+    id: local-v2-judge
+    max_new_tokens: 80
+    temperature: 0.0
+    top_p: 1.0
+    seed: 20260923
+    retries: 0
+    tools_enabled: false
+    network_enabled: false
+cache:
+  enabled: true
+  key_fields: [judge_model_id, rubric_id, judge_prompt_sha256]
+limitations:
+  - Judge is an estimate under judge-rubric-v2, not ground truth.
+  - Dedicated judge role is FLAN-T5 Large on this host (role-separated, not status-quo).
+  - Prefer swapping to a mid-size instruct outside the year list when disk allows.
+  - Unverifiable private facts must yield unscored JSON, never a forced number.
+  - Scores are cached by (judge, rubric, judge_prompt_sha256); cache never rewrites trips.

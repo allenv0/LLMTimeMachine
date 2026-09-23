@@ -1,1 +1,1 @@
-"""UI package for the local Streamlit app."""
+"""UI shell modules for the Streamlit app."""

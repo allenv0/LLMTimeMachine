@@ -126,7 +126,12 @@ def test_score_trip_with_scripted_judge(store, paths, monkeypatch):
     manifest = controller.run_trip("judge me", block_network_during_trip=False)
     assert manifest.complete
 
-    judge = JudgeService(paths=paths, factory=F())
+    judge = JudgeService(
+        paths=paths,
+        factory=F(),
+        judge_config_path=REPO_ROOT / "registry" / "judges" / "judge-v1.yaml",
+        rubric_path=REPO_ROOT / "registry" / "judges" / "rubric-v1.yaml",
+    )
     # script judge generation without real weights
     replies = {"a": "SCORE: 3", "b": "UNSCORED: private unpublished fact"}
 

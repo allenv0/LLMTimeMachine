@@ -45,6 +45,10 @@ def render_judge_input(
     refuse = "\n".join(f"- {r}" for r in rubric.get("refuse_when") or [])
     contract = (rubric.get("output_contract") or "").strip()
     criterion = success_criterion.strip() if success_criterion else "(none)"
+    parse_mode = str(rubric.get("parse_mode") or "text")
+    contract_hint = contract
+    if parse_mode == "json" and "JSON" not in contract.upper():
+        contract_hint = contract + "\nReturn a single JSON object."
     parts = [
         f"You are a strict local quality judge under rubric `{rubric.get('id')}`.",
         "This is an ESTIMATE, not ground truth.",
@@ -68,7 +72,7 @@ def render_judge_input(
         output_text,
         "",
         "## Output contract",
-        contract,
+        contract_hint,
         "",
         "Judge response:",
     ]
@@ -80,13 +84,28 @@ def hash_judge_input(text: str) -> str:
 
 
 def parse_judge_reply(text: str) -> tuple[str, int | None, str]:
-    """Return (status, score_1_10, reason)."""
+    """Return (status, score_1_10, reason).
+
+    Supports rubric v2 JSON contract and v1 free-text SCORE/UNSCORED lines.
+    Never coerces an unparseable reply into a number.
+    """
     if not text or not text.strip():
         return "unscored", None, "empty judge reply"
+
+    stripped = text.strip()
+    json_result = _try_parse_json_contract(stripped)
+    if json_result is not None:
+        return json_result
+
     for line in text.splitlines():
         s = line.strip()
         if not s:
             continue
+        # Strip optional code fences noise around a JSON payload on one line.
+        if s.startswith("{") and s.endswith("}"):
+            json_result = _try_parse_json_contract(s)
+            if json_result is not None:
+                return json_result
         upper = s.upper()
         if upper.startswith("SCORE:"):
             rest = s.split(":", 1)[1].strip()
@@ -113,3 +132,38 @@ def parse_judge_reply(text: str) -> tuple[str, int | None, str]:
                 reason = "judge refused (no detail)"
             return "unscored", None, reason
     return "unscored", None, "no SCORE/UNSCORED line in judge reply"
+
+
+def _try_parse_json_contract(text: str) -> tuple[str, int | None, str] | None:
+    """Parse rubric v2 JSON: {"score": n} or {"unscored": reason}."""
+    import json
+    import re
+
+    candidate = text.strip()
+    if candidate.startswith("```"):
+        candidate = re.sub(r"^```(?:json)?\s*", "", candidate)
+        candidate = re.sub(r"\s*```$", "", candidate).strip()
+    # Tolerate a single JSON object embedded in short noise.
+    match = re.search(r"\{[^{}]*\}", candidate, flags=re.DOTALL)
+    if not match:
+        return None
+    blob = match.group(0)
+    try:
+        data = json.loads(blob)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict):
+        return None
+    if "unscored" in data:
+        reason = str(data.get("unscored") or "judge refused").strip() or "judge refused"
+        return "unscored", None, reason
+    if "score" in data:
+        raw = data.get("score")
+        try:
+            score = int(raw)
+        except (TypeError, ValueError):
+            return "unscored", None, f"unparseable JSON score: {raw!r}"
+        if score < 1 or score > 10:
+            return "unscored", None, f"score out of range: {score}"
+        return "scored", score, ""
+    return None
