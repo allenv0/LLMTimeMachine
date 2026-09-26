@@ -5,11 +5,13 @@ from __future__ import annotations
 from time_machine.diary import DiaryStore
 from time_machine.domain import PromptDiaryEntry
 from time_machine.trip_utils import hash_prompt
+from time_machine.ui import theme
 
 
 def render_diary_panel(st, diary: DiaryStore, *, active_trip_id: str | None = None, raw_prompt: str = "") -> str | None:
     """Sidebar/main diary panel. Returns selected entry_id or None."""
-    st.subheader("Prompt diary")
+    theme.inject(st)
+    st.markdown(theme.section("Prompt diary", "pre-registered dispatches"), unsafe_allow_html=True)
     st.caption(
         "Pre-register private weird prompts and revisit them over time. "
         "Local only. Full text stays on disk under local-data/diary/."
@@ -41,7 +43,7 @@ def render_diary_panel(st, diary: DiaryStore, *, active_trip_id: str | None = No
             st.info("Not marked solved yet.")
         st.write(f"Linked trips: {', '.join(t.trip_id for t in entry.trips) or '—'}")
     else:
-        st.write("No diary entries yet.")
+        st.markdown(theme.empty_state("Diary is empty — file a private dispatch to begin."), unsafe_allow_html=True)
 
     st.markdown("**Register a prompt**")
     prompt = st.text_area(

@@ -148,7 +148,7 @@ def assess_model(spec: ModelSpec, paths: AppPaths) -> RunnerAvailability:
     if not present:
         return RunnerAvailability(
             available=False,
-            reason="checkpoint not preloaded; run `time-machine preload` first",
+            reason="checkpoint not preloaded; run `old-weights preload` first",
             hardware_profile=rec if rec in profile_rank else "unknown",
             details={"artifact_present": False},
         )

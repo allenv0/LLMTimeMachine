@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 from time_machine.chat_session import CHAT_DERAIL_NOTE, ChatService, ChatStore, chat_adapter_for
+from time_machine.ui import theme
 
 
 def render_chat_panel(st, chat: ChatService, chat_store: ChatStore, cohort) -> None:
-    st.subheader("Playground chat")
+    theme.inject(st)
+    st.markdown(
+        theme.section("Talk to a checkpoint", "multi-turn · visible adapters"),
+        unsafe_allow_html=True,
+    )
     st.caption(
-        "Talk to one historical checkpoint. Multi-turn with **visible** adapters. "
-        "No hidden system prompt. Same frozen generation profile each turn."
+        "Fire up one historical model. No hidden system prompt. "
+        "Same frozen generation profile each turn."
     )
 
     models = sorted(cohort.models, key=lambda m: (m.display_year, m.id))
@@ -44,15 +49,20 @@ def render_chat_panel(st, chat: ChatService, chat_store: ChatStore, cohort) -> N
 
     for turn in session.turns:
         who = "You" if turn.role == "user" else session.display_name
-        with st.chat_message("user" if turn.role == "user" else "assistant"):
-            st.markdown(f"**{who}**")
-            if turn.text:
-                st.write(turn.text)
-            elif turn.status == "failed":
-                st.error(turn.error_message or "turn failed")
-            with st.expander("Audit this turn", expanded=False):
-                st.write(f"Adapter `{turn.adapter_id}` v{turn.adapter_version}")
-                st.code(turn.prepared_text or "(none)", language="text")
+        text = turn.text or (turn.error_message or "")
+        if turn.status == "failed" and not turn.text:
+            st.markdown(theme.erratum(f"turn failed · {turn.error_message or 'no detail'}"), unsafe_allow_html=True)
+        elif text:
+            st.markdown(theme.slip(f"{who}: {text}", role=turn.role), unsafe_allow_html=True)
+        with st.expander("Audit this turn", expanded=False):
+            st.write(f"Adapter `{turn.adapter_id}` v{turn.adapter_version}")
+            st.code(turn.prepared_text or "(none)", language="text")
+
+    if session.derail_warning_shown:
+        st.markdown(
+            theme.colophon(CHAT_DERAIL_NOTE),
+            unsafe_allow_html=True,
+        )
 
     user_text = st.chat_input("Say something to this checkpoint…")
     if user_text:

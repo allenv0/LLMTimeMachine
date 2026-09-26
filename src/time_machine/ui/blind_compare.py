@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from time_machine.domain import Cohort, TripManifest, UserAnnotations
 from time_machine.trip_service import blind_mapping_for_trip
+from time_machine.ui import theme
 
 
 def ensure_mapping(annotations: UserAnnotations, trip_id: str, model_ids: list[str]) -> UserAnnotations:
@@ -27,7 +28,8 @@ def render_blind_compare(
     mapping = annotations.blind_mapping
     reverse = {label: mid for mid, label in mapping.items()}
 
-    st.subheader("Blind comparison")
+    theme.inject(st)
+    st.markdown(theme.section("Blind tasting", "no years until you reveal"), unsafe_allow_html=True)
     st.caption(
         "Blind rank is one user’s one-trip preference — not a statistical measurement."
     )
@@ -49,8 +51,16 @@ def render_blind_compare(
         if not mid:
             continue
         with st.container(border=True):
-            st.markdown(f"### Candidate {label}")
-            st.markdown(outputs.get(mid, ""))
+            st.markdown(
+                f'<div class="tm-card-head">{theme.letter_badge(label)}'
+                f'<div class="tm-card-name">Candidate {label}</div></div>',
+                unsafe_allow_html=True,
+            )
+            body = outputs.get(mid, "")
+            if body.strip():
+                st.markdown(f'<div class="tm-output clamp">{body}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown(theme.empty_state("(no copy filed)"), unsafe_allow_html=True)
             choice = st.radio(
                 f"Rank for {label}",
                 ["1", "2", "3", "4", "5", "tie", "unranked"],

@@ -8,7 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-APP_NAME = "LLM Time Machine"
+APP_NAME = "Old Weights"
+APP_TAGLINE = "One weird prompt, ten years of LLMs."
 TRUTHFUL_CLAIM = (
     "A laptop-compatible, auditable sample of LLM history. "
     "It is not a verified record of the best model in every year."

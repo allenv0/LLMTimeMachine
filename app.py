@@ -1,4 +1,4 @@
-"""LLM Time Machine — local Streamlit entrypoint (thin UI shell).
+"""Old Weights — local Streamlit entrypoint (thin UI shell).
 
 Launch (loopback only):
 
@@ -44,10 +44,16 @@ from time_machine.ui import (
     progress,
     quick_tour,
     results,
+    theme,
     timeline as timeline_ui,
 )
 
-st.set_page_config(page_title=APP_NAME, page_icon="⏳", layout="wide")
+st.set_page_config(
+    page_title=APP_NAME,
+    page_icon="⏳",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 
 @st.cache_resource
@@ -99,17 +105,31 @@ def main() -> None:
 
     landing.render_landing(st, paths.protocol_path, cohort)
     if cohort.cohort_id != "local-v1":
-        st.warning(
-            f"**Limitation banner:** active cohort is `{cohort.cohort_id}` "
-            "(hardware-profile substitute / decade spine), not the standard `local-v1` five-model cohort."
+        st.markdown(
+            theme.note_block(
+                f"{theme.badge('Cohort', 'accent')} Active lineup is <strong>{cohort.cohort_id}</strong> — "
+                "laptop-compatible stops with labeled substitutes and holes, "
+                "not verified annual frontier models."
+            ),
+            unsafe_allow_html=True,
         )
-    timeline_ui.render_decade_spine(st, cohort)
+    active_year = None
+    trip_id_early = st.session_state.get("active_trip_id")
+    if trip_id_early:
+        try:
+            _m = store.read_manifest(trip_id_early)
+            years = [r.display_year or 0 for r in _m.runs if r.display_year]
+            active_year = min(years) if years else None
+        except Exception:
+            active_year = None
+    timeline_ui.render_decade_spine(st, cohort, active_year=active_year)
+    st.markdown(theme.rule(), unsafe_allow_html=True)
 
     with st.sidebar:
-        st.header("Session")
-        st.write(f"App version `{__version__}`")
-        st.write(f"Protocol `{cohort.protocol_version}`")
-        st.write(f"Cohort `{cohort.cohort_id}` · {len(cohort.models)} models")
+        st.markdown(theme.kicker("Instrument panel"), unsafe_allow_html=True)
+        st.markdown(f"**{APP_NAME}**")
+        st.caption(f"v{__version__} · protocol `{cohort.protocol_version}` · cohort `{cohort.cohort_id}`")
+        st.caption(f"{len(cohort.models)} running stops · prompt limit {cohort.prompt.max_chars}")
         st.selectbox(
             "Runner",
             ["composite", "fake", "transformers", "quantized"],
@@ -118,7 +138,13 @@ def main() -> None:
         )
         if st.checkbox("Show preflight", value=False):
             st.json(hardware_summary(paths))
-        st.caption("Bind address must remain 127.0.0.1. No remote inference.")
+        st.markdown(
+            theme.note_block(
+                f"{theme.badge('Local', 'ink')} Bind address must remain <code>127.0.0.1</code>. "
+                "No remote inference."
+            ),
+            unsafe_allow_html=True,
+        )
 
     raw_prompt, criterion, trip_scope = prompt_form.render_prompt_form(
         st, cohort, paths.starter_prompts_path
@@ -268,11 +294,10 @@ def main() -> None:
         with tab_data:
             local_data.render_local_data_panel(st, store, trip_id=trip_id)
     else:
-        tab_spine, tab_diary, tab_walk, tab_chat, tab_data = st.tabs(
-            ["Decade spine", "Diary", "Decade walk", "Playground chat", "Local data"]
+        # Decade spine is already the hero above; tabs stay for work surfaces.
+        tab_diary, tab_walk, tab_chat, tab_data = st.tabs(
+            ["Diary", "Decade walk", "Playground chat", "Local data"]
         )
-        with tab_spine:
-            timeline_ui.render_decade_spine(st, cohort)
         with tab_diary:
             diary_ui.render_diary_panel(st, diary, active_trip_id=None, raw_prompt="")
             walk_controller = _controller(

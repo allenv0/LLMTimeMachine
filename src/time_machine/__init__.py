@@ -1,3 +1,3 @@
-"""LLM Time Machine — local historical cohort demo."""
+"""Old Weights — local historical cohort demo."""
 
 __version__ = "0.1.0"

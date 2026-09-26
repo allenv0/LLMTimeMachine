@@ -6,21 +6,38 @@ from pathlib import Path
 
 from time_machine.artifact_store import ArtifactStore
 from time_machine.export_service import ExportService
+from time_machine.ui import theme
 
 
 def render_local_data_panel(st, store: ArtifactStore, trip_id: str | None = None) -> None:
-    st.subheader("Local data")
+    theme.inject(st)
+    st.markdown(theme.section("Holdings", "local disk only"), unsafe_allow_html=True)
     st.write(f"Path: `{store.paths.local_data_dir}`")
     st.caption("Files are local only. Nothing is uploaded. Diary prompts stay under local-data/diary/.")
 
     trips = store.list_trips()
-    st.write(f"Stored trips: **{len(trips)}**")
     try:
         from time_machine.diary import DiaryStore
 
         n_diary = len(DiaryStore(store.paths).list())
     except Exception:
         n_diary = 0
+    try:
+        from time_machine.curves_pack import discover_packs
+
+        n_packs = len(discover_packs(store.paths))
+    except Exception:
+        n_packs = 0
+
+    st.markdown(
+        theme.holdings(
+            (str(len(trips)), "Trips"),
+            (str(n_diary), "Diary"),
+            (str(n_packs), "Packs"),
+        ),
+        unsafe_allow_html=True,
+    )
+    st.write(f"Stored trips: **{len(trips)}**")
     st.write(f"Diary entries: **{n_diary}**")
 
     if trip_id and trip_id in trips:

@@ -1,5 +1,5 @@
 # Cohort registry — protocol local-v1
-# Frozen laptop-compatible representative cohort. Do not edit without a decision-log entry.
+# Frozen laptop-compatible representative cohort. Do not edit without recording why.
 schema_version: "1"
 cohort_id: local-v1
 protocol_version: local-v1

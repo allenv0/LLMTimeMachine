@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from time_machine.decade_walk import walk_models, walk_script
 from time_machine.diary import DiaryStore
+from time_machine.ui import theme
 
 
 def render_decade_walk(
@@ -15,9 +16,10 @@ def render_decade_walk(
     hardware_summary: dict | None = None,
     entry_id: str | None = None,
 ) -> None:
-    st.subheader("Decade walk")
+    theme.inject(st)
+    st.markdown(theme.section("Decade walk", "one stop at a time · simulated lived time"), unsafe_allow_html=True)
     st.caption(
-        "Simulate living through releases: reveal one year at a time and leave a reflection. "
+        "Reveal one year at a time and leave a reflection. "
         "This is theater over real checkpoints — not calendar time. Newer is not always better."
     )
 

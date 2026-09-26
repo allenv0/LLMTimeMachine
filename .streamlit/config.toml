@@ -1,0 +1,15 @@
+# Streamlit theme — newsprint paper, ink, ochre accent (time-machine timetable UI).
+[theme]
+base = "light"
+primaryColor = "#C47B2D"
+backgroundColor = "#F7F4EF"
+secondaryBackgroundColor = "#EFEAE3"
+textColor = "#1C1B19"
+font = "serif"
+borderColor = "#D9D2C7"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

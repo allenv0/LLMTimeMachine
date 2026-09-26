@@ -1,6 +1,6 @@
 # Lite substitute cohort — protocol local-v1 / hardware profile: lite
 # Visible limitation: NOT the standard local-v1 five-model cohort.
-# Used when disk/RAM cannot hold the standard laptop cohort (see docs/hardware-profiles.md).
+# Used when disk/RAM cannot hold the standard laptop cohort.
 schema_version: "1"
 cohort_id: lite-v1
 protocol_version: local-v1

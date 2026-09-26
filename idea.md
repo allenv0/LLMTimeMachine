@@ -1,4 +1,6 @@
-# LLM Time Travel Visualization Proposal
+# LLM Time Travel Visualization Proposal by gwern
+
+Link: https://gwern.net/blog/2026/llm-timetravel
 
 Proposal for AI education application: interactive prompt use of the best surviving LLM from each year over the past decade, to dramatize the rapid escalation of capabilities for people who weren’t paying attention.
 

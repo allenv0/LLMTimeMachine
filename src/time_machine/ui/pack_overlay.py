@@ -13,13 +13,18 @@ from time_machine.curves_pack import (
     pack_overlay,
     save_pack,
 )
+from time_machine.ui import theme
 
 
 def render_pack_overlay(st, paths, my_points: list[dict], trip_id: str = "") -> None:
-    st.subheader("Compare to a curve pack")
+    theme.inject(st)
+    st.markdown(
+        theme.section("Against the world?", "pack sample · not all of LLM history"),
+        unsafe_allow_html=True,
+    )
     st.caption(
-        "Your curve vs a **published sample** (or demonstration pack). "
-        "This is not all of LLM progress — pack kind and n are always shown."
+        "Your curve vs a published sample (or demonstration pack). "
+        "Pack kind and n are always shown."
     )
 
     if st.button("Install demonstration pack (method demo only)", key="pack-demo"):
@@ -30,9 +35,11 @@ def render_pack_overlay(st, paths, my_points: list[dict], trip_id: str = "") -> 
 
     pack_paths = discover_packs(paths)
     if not pack_paths:
-        st.info(
-            "No curve packs found. Install the demonstration pack to preview the overlay UI, "
-            "or drop a `curves-pack-v1.json` under `registry/curve-packs/` or `local-data/curve-packs/`."
+        st.markdown(
+            theme.empty_state(
+                "No pack loaded — install the demonstration pack or drop a curves-pack-v1.json."
+            ),
+            unsafe_allow_html=True,
         )
         return
 
@@ -61,9 +68,20 @@ def render_pack_overlay(st, paths, my_points: list[dict], trip_id: str = "") -> 
     st.write(overlay["a11y_summary"])
 
     st.markdown(_svg_overlay(my_points, overlay), unsafe_allow_html=True)
-    st.caption(
-        "Bold green = your ratings or estimates. Thin purple = pack curves. "
-        "Band = median and IQR by year when n is large enough. Gaps stay gaps."
+    st.markdown(
+        theme.figure_caption(
+            4,
+            "Thin lines = pack · bold green = yours · band = median/IQR when n is large enough. Gaps stay gaps.",
+        ),
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        theme.legend(
+            ("human", "Yours"),
+            ("pack", "Pack lines"),
+            ("est", "Pack median"),
+        ),
+        unsafe_allow_html=True,
     )
 
     if st.button("Export compare pack", key="pack-export"):

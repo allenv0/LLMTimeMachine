@@ -9,6 +9,7 @@ from time_machine.curves import (
     build_trip_curve,
     portfolio_series,
 )
+from time_machine.ui import theme
 
 
 def _sparkline_ascii(points: list[CurvePoint]) -> str:
@@ -22,18 +23,17 @@ def _sparkline_ascii(points: list[CurvePoint]) -> str:
 
 def render_trip_curve(st, cohort: Cohort, manifest: TripManifest, annotations) -> list[CurvePoint]:
     points = build_trip_curve(manifest, annotations, cohort=cohort)
-    st.subheader("Progress curve (your ratings)")
+    theme.inject(st)
+    st.markdown(
+        theme.section("Quality over time", "your ratings · gaps stay gaps"),
+        unsafe_allow_html=True,
+    )
     st.caption(CURVE_CAPTION)
     if not points:
-        st.info(
-            "No rated models yet. Rate outputs with the −2..+2 quality control "
-            "(or usefulness) and save annotations to draw this curve. "
-            "Unrated models stay gaps — we do not invent scores."
-        )
+        st.markdown(theme.empty_state("No ratings filed — gaps stay gaps."), unsafe_allow_html=True)
         return points
 
     st.markdown(f"**Trip series:** `{_sparkline_ascii(points)}`")
-    # simple table chart (text-summary accessible)
     cols = st.columns([2, 1, 1, 2])
     cols[0].markdown("**Year · model**")
     cols[1].markdown("**Ordinal**")
@@ -46,11 +46,14 @@ def render_trip_curve(st, cohort: Cohort, manifest: TripManifest, annotations) -
         c[2].write(p.source)
         c[3].caption(ORDINAL_LABELS.get(p.ordinal, ""))
 
-    # lightweight SVG polyline
+    st.markdown(theme.legend(("human", "Your ratings"),), unsafe_allow_html=True)
     st.markdown(_svg_curve(points), unsafe_allow_html=True)
-    st.caption(
-        "Horizontal = display year. Vertical = your ordinal (−2 much worse … +2 much better). "
-        "Gaps are missing ratings."
+    st.markdown(
+        theme.figure_caption(
+            2,
+            "Your ordinal over time (−2 much worse … +2 much better). Gaps are missing ratings — never zero-filled.",
+        ),
+        unsafe_allow_html=True,
     )
     return points
 
@@ -101,7 +104,8 @@ def _svg_curve(points: list[CurvePoint]) -> str:
 
 
 def render_portfolio(st, series_by_entry: dict[str, list[CurvePoint]]) -> None:
-    st.subheader("Your prompt portfolio")
+    theme.inject(st)
+    st.markdown(theme.section("Your portfolio", "local only · not global progress"), unsafe_allow_html=True)
     data = portfolio_series(series_by_entry)
     st.caption(data["caption"])
     n = data["n_prompts"]

@@ -1,10 +1,13 @@
-"""Result cards with audit drawers and personal annotations."""
+"""Result dispatches — newspaper wire copy with year gutter, folio, erratum."""
 
 from __future__ import annotations
+
+from html import escape
 
 from time_machine.config import FAILURE_TAG_VALUES
 from time_machine.domain import Cohort, ModelRun, TripManifest, UserAnnotations
 from time_machine.prompt_adapters import adapter_explanation
+from time_machine.ui import theme
 
 MODE_BADGE = {
     "base_continuation": "Base",
@@ -31,12 +34,19 @@ def render_result_cards(
     prepared_inputs: dict[str, str],
     annotations: UserAnnotations,
 ):
-    """Render chronological cards. Returns updated annotations."""
+    """Render chronological dispatches. Returns updated annotations."""
+    theme.inject(st)
     updated = annotations.model_copy(deep=True)
     by_id = {m.id: m for m in cohort.models}
 
-    st.subheader("Results (oldest → newest)")
-    st.caption("These are personal annotations, not scientific measurements.")
+    st.markdown(
+        theme.section("Dispatches", "oldest → newest · your notes are not measurements"),
+        unsafe_allow_html=True,
+    )
+
+    if not manifest.runs:
+        st.markdown(theme.empty_state("No dispatches filed yet."), unsafe_allow_html=True)
+        return updated
 
     for run in manifest.runs:
         spec = by_id.get(run.model_id)
@@ -45,33 +55,64 @@ def render_result_cards(
         mode = run.mode or (spec.mode if spec else "chat")
 
         with st.container(border=True):
-            head = f"{year} · {name}"
-            st.markdown(f"### {head}")
+            chips = [
+                theme.badge(MODE_BADGE.get(mode, mode), "ink"),
+                theme.badge(run.status, "ok" if run.status == "completed" else "danger"),
+            ]
             if spec is not None and getattr(spec, "slot_status", "available") == "substitute":
-                st.warning(
-                    f"SUBSTITUTE stand-in for {spec.stands_for or 'an annual frontier class'}"
-                )
-            c1, c2, c3 = st.columns(3)
-            c1.markdown(f"**{MODE_BADGE.get(mode, mode)}**")
-            c2.markdown(f"Status: **{run.status}**")
+                chips.append(theme.badge("Sub", "accent"))
+            st.markdown(theme.card_head(str(year), name, *chips), unsafe_allow_html=True)
+
+            if spec is not None and getattr(spec, "slot_status", "available") == "substitute":
+                st.caption(f"Stand-in for {spec.stands_for or 'an annual frontier class'}.")
+
+            meta_bits = []
             if run.load_seconds or run.generation_seconds:
-                c3.caption(
-                    f"load {run.load_seconds:.2f}s · gen {run.generation_seconds:.2f}s"
-                )
+                meta_bits.append(f"<span>load {run.load_seconds:.2f}s</span>")
+                meta_bits.append(f"<span>gen {run.generation_seconds:.2f}s</span>")
+            if meta_bits:
+                st.markdown(theme.row(*meta_bits), unsafe_allow_html=True)
 
             if run.status == "completed":
-                st.markdown(outputs.get(run.model_id, ""))
+                body = escape(outputs.get(run.model_id, "") or "")
+                if not body.strip():
+                    st.markdown(
+                        '<div class="tm-output"><em>(no copy filed)</em></div>',
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(
+                        f'<div class="tm-output clamp">{body}</div>',
+                        unsafe_allow_html=True,
+                    )
+                    with st.expander("Continue reading", expanded=False):
+                        st.markdown(outputs.get(run.model_id, ""))
             else:
-                st.error(
-                    f"{run.status}: {run.error_code or 'error'} — "
-                    f"{run.error_message or 'no detail'}"
+                st.markdown(
+                    theme.erratum(
+                        f"delayed at {year} · {run.status}: {run.error_code or 'error'} — "
+                        f"{run.error_message or 'no detail'}"
+                    ),
+                    unsafe_allow_html=True,
                 )
+
+            # Folio / byline
+            pin = (run.source_revision or "")[:10]
+            st.markdown(
+                theme.folio(
+                    f"<span>{escape(run.adapter_id or '')}</span>",
+                    f"<span>pin {escape(pin)}…</span>",
+                    f"<span>mode {escape(mode)}</span>",
+                ),
+                unsafe_allow_html=True,
+            )
 
             if run.limitations:
                 st.caption("Limitations: " + "; ".join(run.limitations))
 
+            st.markdown(theme.rule(), unsafe_allow_html=True)
+            st.markdown(theme.kicker("Rate this dispatch"), unsafe_allow_html=True)
             defaults = _annotation_defaults(updated, run.model_id)
-            st.markdown("**Quality vs what I hoped**")
             ord_labels = [
                 "unset",
                 "−2 much worse",
@@ -156,6 +197,8 @@ def render_result_cards(
                 else:
                     st.write("No runtime telemetry for this run.")
 
+    st.markdown(theme.rule(heavy=True), unsafe_allow_html=True)
+    st.markdown(theme.dirty_bar("Review notes before leaving this desk"), unsafe_allow_html=True)
     trip_notes = st.text_area(
         "Trip notes (local only)",
         value=updated.trip_notes,

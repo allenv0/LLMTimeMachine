@@ -4,14 +4,15 @@ from __future__ import annotations
 
 from time_machine.diary import DiaryStore
 from time_machine.diary_rerun import DiaryRerunService
+from time_machine.ui import theme
 
 
 def render_diary_rerun(st, rerun: DiaryRerunService, diary: DiaryStore) -> None:
-    st.subheader("Diary re-run")
+    theme.inject(st)
+    st.markdown(theme.section("Re-run schedule", "explicit · not calendar time"), unsafe_allow_html=True)
     st.caption(
-        "Explicit replay when a new cohort/year slot lands. **Not calendar time.** "
-        "Each re-run creates a new trip and links it to the entry. Email is cloud-only; "
-        "download an .ics reminder instead."
+        "Replay when a new cohort/year slot lands. Each re-run creates a new trip. "
+        "Email is cloud-only; download an .ics reminder instead."
     )
     entries = diary.list()
     if not entries:
@@ -47,10 +48,10 @@ def render_diary_rerun(st, rerun: DiaryRerunService, diary: DiaryStore) -> None:
 
 
 def render_first_solved_timeline(st, rows: list[dict]) -> None:
-    st.subheader("First-solved timeline")
+    theme.inject(st)
+    st.markdown(theme.section("First-solved", "user marks · not ground truth"), unsafe_allow_html=True)
     st.caption(
-        "When each pre-registered prompt was first marked solved. "
-        "User (or opt-in judge) marks — not automatic ground truth. Gaps stay gaps."
+        "When each pre-registered prompt was first marked solved. Gaps stay gaps."
     )
     if not rows:
         st.info("No diary entries yet.")

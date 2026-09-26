@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from time_machine.domain import JudgeScore, TripManifest
 from time_machine.evaluation_judge import BANNER, JudgeService
+from time_machine.ui import theme
 
 
 def render_judge_banner(st) -> None:
@@ -11,7 +12,11 @@ def render_judge_banner(st) -> None:
 
 
 def render_estimated_curve(st, scores: list[JudgeScore]) -> None:
-    st.subheader("Estimated quality curve (judge)")
+    theme.inject(st)
+    st.markdown(
+        theme.section("Estimated quality", "judge · not ground truth"),
+        unsafe_allow_html=True,
+    )
     render_judge_banner(st)
     if not scores:
         st.info(
@@ -45,9 +50,22 @@ def render_estimated_curve(st, scores: list[JudgeScore]) -> None:
 
     if scored:
         st.markdown(_svg_estimated(scored), unsafe_allow_html=True)
-        st.caption(
-            "Horizontal = display year. Vertical = estimated 1–10. "
-            "This is an ESTIMATE under a versioned rubric — not ground truth."
+        n_s = len(scored)
+        n_u = len(unscored)
+        st.markdown(theme.coverage_bar(n_s, n_u), unsafe_allow_html=True)
+        st.markdown(
+            theme.figure_caption(
+                3,
+                f"Estimated 1–10 over time · scored {n_s} / refused {n_u}. "
+                "ESTIMATE under a versioned rubric — not ground truth.",
+            ),
+            unsafe_allow_html=True,
+        )
+        st.markdown(theme.legend(("est", "Judge estimate"), ("pack", "Gaps = unscored")), unsafe_allow_html=True)
+    else:
+        st.markdown(
+            theme.empty_state("No estimates filed — refuse is better than invent."),
+            unsafe_allow_html=True,
         )
 
 

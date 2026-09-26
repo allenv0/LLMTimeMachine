@@ -8,6 +8,7 @@ from pathlib import Path
 
 from time_machine.domain import Cohort
 from time_machine.errors import InputUnsupportedError
+from time_machine.ui import theme
 
 _NON_ASCII_RE = re.compile(r"[^\x00-\x7F]")
 
@@ -45,7 +46,8 @@ def render_prompt_form(st, cohort: Cohort, starter_path: Path):
     trip_scope is ``"full"``, ``"tour"``, or ``""`` when not running.
     """
     starters = load_starter_prompts(starter_path)
-    st.subheader("Your prompt")
+    theme.inject(st)
+    st.markdown(theme.section("Your dispatch", "idiosyncratic beats generic"), unsafe_allow_html=True)
     st.caption("Your own unusual prompt is more informative than any starter prompt.")
 
     starter_label = "Write your own"
@@ -78,7 +80,7 @@ def render_prompt_form(st, cohort: Cohort, starter_path: Path):
         )
 
     criterion = st.text_input(
-        "Optional success criterion",
+        "+ Success criterion (optional)",
         placeholder="What would a good answer accomplish?",
     )
 
@@ -99,18 +101,19 @@ def render_prompt_form(st, cohort: Cohort, starter_path: Path):
     st.markdown("**Trip scope**")
     col_full, col_tour = st.columns(2)
     full_clicked = col_full.button(
-        "Run full trip",
+        "Run full service",
         type="primary",
         disabled=bool(err),
         use_container_width=True,
         help="Every model in the frozen cohort, oldest → newest.",
     )
     tour_clicked = col_tour.button(
-        "Quick three-era tour",
+        "Board three-era tour",
         disabled=bool(err),
         use_container_width=True,
         help="Three stops only: base → instruction → chat.",
     )
+    st.caption("Sequential load · no network · audit on every stop")
     if err and (full_clicked or tour_clicked):
         st.error(err)
     if err and prompt.strip():

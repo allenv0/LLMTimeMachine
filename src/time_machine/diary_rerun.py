@@ -122,11 +122,11 @@ class DiaryRerunService:
         return (
             "BEGIN:VCALENDAR\n"
             "VERSION:2.0\n"
-            "PRODID:-//LLM Time Machine//local-v3//EN\n"
+            "PRODID:-//Old Weights//local-v3//EN\n"
             "BEGIN:VEVENT\n"
             f"UID:tm-diary-{entry.entry_id}@localhost\n"
             f"DTSTART;VALUE=DATE:{due_date.replace('-', '')}\n"
-            "SUMMARY:Re-run LLM Time Machine diary entry\n"
+            "SUMMARY:Re-run Old Weights diary entry\n"
             f"DESCRIPTION:Re-run diary entry {entry.entry_id} after a new cohort ships. "
             "Local reminder only — no email is sent from this app.\n"
             "END:VEVENT\n"

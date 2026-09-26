@@ -175,7 +175,7 @@ def cmd_delete(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="time-machine", description="LLM Time Machine local demo")
+    p = argparse.ArgumentParser(prog="old-weights", description="Old Weights local demo")
     p.add_argument("--root", default=None, help="project root (default: cwd)")
     sub = p.add_subparsers(dest="command", required=True)
 
