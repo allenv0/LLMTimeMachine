@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from huggingface_hub import snapshot_download
 
-from time_machine.artifact_store import sha256_file
+from llm_time_machine.artifact_store import sha256_file
 
 MODELS = [
     (

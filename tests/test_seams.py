@@ -7,16 +7,16 @@ from pathlib import Path
 
 import pytest
 
-from time_machine.adapter_catalog import AdapterCatalog
-from time_machine.artifact_store import ArtifactStore
-from time_machine.cohort_catalog import CohortCatalog
-from time_machine.domain import UserAnnotations
-from time_machine.evaluation import NullEvaluator, EvaluationPort
-from time_machine.network_guard import NetworkBlockedError, block_network
-from time_machine.prompt_adapters import prepare_input, render_prepared_text
-from time_machine.runners.factory import RunnerFactory
-from time_machine.runners.fake import FakeRunner
-from time_machine.trip_controller import TripController, make_controller
+from llm_time_machine.adapter_catalog import AdapterCatalog
+from llm_time_machine.artifact_store import ArtifactStore
+from llm_time_machine.cohort_catalog import CohortCatalog
+from llm_time_machine.domain import UserAnnotations
+from llm_time_machine.evaluation import NullEvaluator, EvaluationPort
+from llm_time_machine.network_guard import NetworkBlockedError, block_network
+from llm_time_machine.prompt_adapters import prepare_input, render_prepared_text
+from llm_time_machine.runners.factory import RunnerFactory
+from llm_time_machine.runners.fake import FakeRunner
+from llm_time_machine.trip_controller import TripController, make_controller
 from tests.conftest import REPO_ROOT, make_cohort, make_model
 
 
@@ -47,7 +47,7 @@ def test_runner_factory_fake_and_verify(paths):
     factory = RunnerFactory(model_cache=str(paths.model_cache_dir))
     runner = factory.create("fake")
     assert isinstance(runner, FakeRunner)
-    from time_machine.domain import ModelSpec
+    from llm_time_machine.domain import ModelSpec
 
     raw = make_model("m1").model_dump(mode="json")
     raw["source"]["sha256"] = "record-at-preload"
@@ -71,7 +71,7 @@ def test_runner_factory_checksum_mismatch(paths):
     # pin wrong sha
     data = spec.model_dump(mode="json")
     data["source"]["sha256"] = "b" * 64
-    from time_machine.domain import ModelSpec
+    from llm_time_machine.domain import ModelSpec
 
     bad = ModelSpec.model_validate(data)
     avail = factory.verify_artifact(bad)
@@ -80,8 +80,8 @@ def test_runner_factory_checksum_mismatch(paths):
 
 
 def test_incremental_trip_writer_preserves_partial(store: ArtifactStore):
-    from time_machine.domain import ModelRun, TripManifest
-    from time_machine.artifact_store import sha256_text
+    from llm_time_machine.domain import ModelRun, TripManifest
+    from llm_time_machine.artifact_store import sha256_text
 
     manifest = TripManifest(
         trip_id="inc-trip-1",
@@ -117,7 +117,7 @@ def test_trip_controller_incremental_and_cancel(store, paths):
     )
     # one shared runner that fails after 2 successful generations
     shared = FakeRunner(fail_after=2)
-    from time_machine.domain import RunnerAvailability
+    from llm_time_machine.domain import RunnerAvailability
 
     class F:
         def create(self, kind="composite"):
@@ -140,7 +140,7 @@ def test_trip_controller_incremental_and_cancel(store, paths):
 
 
 def test_trip_controller_cancel_midway(store, paths):
-    from time_machine.domain import RunnerAvailability
+    from llm_time_machine.domain import RunnerAvailability
 
     cohort = make_cohort()
 
@@ -192,7 +192,7 @@ def test_trip_controller_cancel_midway(store, paths):
 
 
 def test_null_evaluator_port():
-    from time_machine.domain import ModelRun, TripManifest
+    from llm_time_machine.domain import ModelRun, TripManifest
 
     ev = NullEvaluator()
     assert isinstance(ev, EvaluationPort)
@@ -212,7 +212,7 @@ def test_network_guard_blocks_connect():
 
 def test_prompt_adapters_use_catalog_when_bound():
     cat = AdapterCatalog.load(REPO_ROOT / "registry" / "adapters" / "catalog.yaml")
-    from time_machine import prompt_adapters as pa
+    from llm_time_machine import prompt_adapters as pa
 
     pa.bind_catalog(cat)
     try:
@@ -223,8 +223,8 @@ def test_prompt_adapters_use_catalog_when_bound():
 
 def test_templates_never_leak_placeholder():
     """Regression: {{prompt}} in YAML must not survive .format() as literal {prompt}."""
-    from time_machine import prompt_adapters as pa
-    from time_machine.adapter_catalog import AdapterCatalog
+    from llm_time_machine import prompt_adapters as pa
+    from llm_time_machine.adapter_catalog import AdapterCatalog
 
     cat = AdapterCatalog.load(REPO_ROOT / "registry" / "adapters" / "catalog.yaml")
     pa.bind_catalog(cat)

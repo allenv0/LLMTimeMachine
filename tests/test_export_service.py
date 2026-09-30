@@ -6,12 +6,12 @@ from pathlib import Path
 
 import pytest
 
-from time_machine.artifact_store import ArtifactStore
-from time_machine.domain import UserAnnotations
-from time_machine.errors import ArtifactError
-from time_machine.export_service import ExportService
-from time_machine.trip_service import TripService
-from time_machine.runners.fake import FakeRunner
+from llm_time_machine.artifact_store import ArtifactStore
+from llm_time_machine.domain import UserAnnotations
+from llm_time_machine.errors import ArtifactError
+from llm_time_machine.export_service import ExportService
+from llm_time_machine.trip_service import TripService
+from llm_time_machine.runners.fake import FakeRunner
 
 
 def test_zip_contains_only_selected_trip(store: ArtifactStore, paths):

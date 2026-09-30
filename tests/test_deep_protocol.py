@@ -8,22 +8,22 @@ from pathlib import Path
 
 import pytest
 
-from time_machine.adapter_catalog import AdapterCatalog
-from time_machine.artifact_store import ArtifactStore
-from time_machine.cohort_catalog import CohortCatalog
-from time_machine.config import DISCLOSURE_LINES, TRUTHFUL_CLAIM, FAILURE_TAG_VALUES
-from time_machine.domain import UserAnnotations
-from time_machine.errors import InputUnsupportedError
-from time_machine.evaluation import NullEvaluator
-from time_machine.export_service import ExportService
-from time_machine.network_guard import NetworkBlockedError, block_network
-from time_machine.prompt_adapters import prepare_input, render_prepared_text
-from time_machine.runners.factory import RunnerFactory
-from time_machine.runners.fake import FakeRunner
-from time_machine.trip_controller import TripController
-from time_machine.trip_utils import blind_mapping_for_trip, hash_prompt
-from time_machine.ui import progress, quick_tour
-from time_machine.ui.prompt_form import looks_non_english, validate_prompt_text
+from llm_time_machine.adapter_catalog import AdapterCatalog
+from llm_time_machine.artifact_store import ArtifactStore
+from llm_time_machine.cohort_catalog import CohortCatalog
+from llm_time_machine.config import DISCLOSURE_LINES, TRUTHFUL_CLAIM, FAILURE_TAG_VALUES
+from llm_time_machine.domain import UserAnnotations
+from llm_time_machine.errors import InputUnsupportedError
+from llm_time_machine.evaluation import NullEvaluator
+from llm_time_machine.export_service import ExportService
+from llm_time_machine.network_guard import NetworkBlockedError, block_network
+from llm_time_machine.prompt_adapters import prepare_input, render_prepared_text
+from llm_time_machine.runners.factory import RunnerFactory
+from llm_time_machine.runners.fake import FakeRunner
+from llm_time_machine.trip_controller import TripController
+from llm_time_machine.trip_utils import blind_mapping_for_trip, hash_prompt
+from llm_time_machine.ui import progress, quick_tour
+from llm_time_machine.ui.prompt_form import looks_non_english, validate_prompt_text
 from tests.conftest import REPO_ROOT, make_cohort, make_model
 
 
@@ -39,7 +39,7 @@ def test_truthful_claim_is_not_frontier_overclaim():
 def test_no_llm_judge_scores_in_local_v1():
     ev = NullEvaluator()
     assert ev.evaluate_run.__doc__ is None or True
-    from time_machine.domain import ModelRun, TripManifest
+    from llm_time_machine.domain import ModelRun, TripManifest
 
     assert ev.evaluate_run(ModelRun(model_id="x", status="completed"), "out") == {}
     assert ev.evaluate_trip(
@@ -108,7 +108,7 @@ def test_trip_directory_reconstructable(store: ArtifactStore, paths):
     controller = TripController(
         cohort=cohort, store=store, factory=None, paths=paths, runner_kind="fake"
     )
-    from time_machine.domain import RunnerAvailability
+    from llm_time_machine.domain import RunnerAvailability
 
     class F:
         def create(self, kind="composite"):
@@ -159,7 +159,7 @@ def test_export_bundle_roundtrip(store: ArtifactStore, paths):
     controller = TripController(
         cohort=cohort, store=store, factory=None, paths=paths, runner_kind="fake"
     )
-    from time_machine.domain import RunnerAvailability
+    from llm_time_machine.domain import RunnerAvailability
 
     class F:
         def create(self, kind="composite"):
@@ -192,7 +192,7 @@ def test_delete_trip_only_selected(store: ArtifactStore, paths):
     controller = TripController(
         cohort=cohort, store=store, factory=None, paths=paths, runner_kind="fake"
     )
-    from time_machine.domain import RunnerAvailability
+    from llm_time_machine.domain import RunnerAvailability
 
     class F:
         def create(self, kind="composite"):
@@ -265,7 +265,7 @@ def test_blind_mapping_three_model_tour_stable():
 
 
 def test_progress_arc_covers_three_modes_and_missing_run():
-    from time_machine.domain import ModelRun
+    from llm_time_machine.domain import ModelRun
 
     cohort = make_cohort()
     tour = CohortCatalog(REPO_ROOT).quick_tour_models(cohort)
@@ -297,7 +297,7 @@ def test_annotations_roundtrip_and_tags_validated(store, paths):
     controller = TripController(
         cohort=cohort, store=store, factory=None, paths=paths, runner_kind="fake"
     )
-    from time_machine.domain import RunnerAvailability
+    from llm_time_machine.domain import RunnerAvailability
 
     class F:
         def create(self, kind="composite"):
@@ -333,7 +333,7 @@ def test_tour_subset_trip_manifest_has_only_three_runs(store, paths):
     controller = TripController(
         cohort=cohort, store=store, factory=None, paths=paths, runner_kind="fake"
     )
-    from time_machine.domain import RunnerAvailability
+    from llm_time_machine.domain import RunnerAvailability
 
     class F:
         def create(self, kind="composite"):

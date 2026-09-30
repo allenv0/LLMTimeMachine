@@ -7,8 +7,8 @@ import copy
 import pytest
 import yaml
 
-from time_machine.errors import RegistryError
-from time_machine.registry import load_cohort, validate_cohort_dict
+from llm_time_machine.errors import RegistryError
+from llm_time_machine.registry import load_cohort, validate_cohort_dict
 from tests.conftest import make_cohort, make_model
 
 

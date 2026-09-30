@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from time_machine.artifact_store import ArtifactStore, sha256_text
-from time_machine.domain import TripManifest, UserAnnotations
-from time_machine.errors import ArtifactError
+from llm_time_machine.artifact_store import ArtifactStore, sha256_text
+from llm_time_machine.domain import TripManifest, UserAnnotations
+from llm_time_machine.errors import ArtifactError
 
 
 def _manifest(trip_id: str = "trip-abc") -> TripManifest:

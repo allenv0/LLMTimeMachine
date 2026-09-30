@@ -6,18 +6,18 @@ import json
 
 import pytest
 
-from time_machine.domain import JudgeScore, UserAnnotations
-from time_machine.errors import RegistryError
-from time_machine.evaluation_judge import BANNER, EVAL_PROTOCOL, JudgeEvaluator, JudgeService
-from time_machine.judge_prompts import (
+from llm_time_machine.domain import JudgeScore, UserAnnotations
+from llm_time_machine.errors import RegistryError
+from llm_time_machine.evaluation_judge import BANNER, EVAL_PROTOCOL, JudgeEvaluator, JudgeService
+from llm_time_machine.judge_prompts import (
     hash_judge_input,
     load_judge_config,
     load_rubric,
     parse_judge_reply,
     render_judge_input,
 )
-from time_machine.runners.fake import FakeRunner
-from time_machine.trip_controller import TripController
+from llm_time_machine.runners.fake import FakeRunner
+from llm_time_machine.trip_controller import TripController
 from tests.conftest import REPO_ROOT, make_cohort, make_model
 
 
@@ -83,7 +83,7 @@ def test_judge_score_validation():
 
 
 def test_evaluator_does_not_autoscore():
-    from time_machine.domain import TripManifest
+    from llm_time_machine.domain import TripManifest
 
     svc = JudgeService(paths=None) if False else None
     ev = JudgeEvaluator(service=object())  # type: ignore
@@ -111,12 +111,12 @@ def test_score_trip_with_scripted_judge(store, paths, monkeypatch):
             return FakeRunner()
 
         def verify_artifact(self, spec):
-            from time_machine.domain import RunnerAvailability
+            from llm_time_machine.domain import RunnerAvailability
 
             return RunnerAvailability(available=True, reason="ok")
 
         def preflight(self, spec):
-            from time_machine.domain import RunnerAvailability
+            from llm_time_machine.domain import RunnerAvailability
 
             return RunnerAvailability(available=True, reason="ok")
 
@@ -202,12 +202,12 @@ def test_trip_run_does_not_create_judge_artifacts(store, paths):
             return FakeRunner()
 
         def verify_artifact(self, spec):
-            from time_machine.domain import RunnerAvailability
+            from llm_time_machine.domain import RunnerAvailability
 
             return RunnerAvailability(available=True, reason="ok")
 
         def preflight(self, spec):
-            from time_machine.domain import RunnerAvailability
+            from llm_time_machine.domain import RunnerAvailability
 
             return RunnerAvailability(available=True, reason="ok")
 

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from time_machine.cohort_catalog import CohortCatalog
-from time_machine.runners.fake import FakeRunner
-from time_machine.trip_controller import TripController
-from time_machine.ui import progress, quick_tour
+from llm_time_machine.cohort_catalog import CohortCatalog
+from llm_time_machine.runners.fake import FakeRunner
+from llm_time_machine.trip_controller import TripController
+from llm_time_machine.ui import progress, quick_tour
 from tests.conftest import REPO_ROOT, make_cohort, make_model
 
 
@@ -94,7 +94,7 @@ def test_trip_runs_only_tour_models(store, paths):
         paths=paths,
         runner_kind="fake",
     )
-    from time_machine.domain import RunnerAvailability
+    from llm_time_machine.domain import RunnerAvailability
 
     class F:
         def create(self, kind="composite"):

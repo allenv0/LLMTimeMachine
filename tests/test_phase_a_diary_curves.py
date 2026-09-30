@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from time_machine.artifact_store import ArtifactStore
-from time_machine.curves import (
+from llm_time_machine.artifact_store import ArtifactStore
+from llm_time_machine.curves import (
     ORDINAL_LABELS,
     build_trip_curve,
     delete_curve,
@@ -16,12 +16,12 @@ from time_machine.curves import (
     read_curve,
     write_curve,
 )
-from time_machine.decade_walk import run_decade_walk, walk_models, walk_script
-from time_machine.diary import DiaryStore
-from time_machine.domain import CurvePoint, UserAnnotations
-from time_machine.evaluation_human import HumanCurveEvaluator
-from time_machine.runners.fake import FakeRunner
-from time_machine.trip_controller import TripController
+from llm_time_machine.decade_walk import run_decade_walk, walk_models, walk_script
+from llm_time_machine.diary import DiaryStore
+from llm_time_machine.domain import CurvePoint, UserAnnotations
+from llm_time_machine.evaluation_human import HumanCurveEvaluator
+from llm_time_machine.runners.fake import FakeRunner
+from llm_time_machine.trip_controller import TripController
 from tests.conftest import make_cohort, make_model
 
 
@@ -47,7 +47,7 @@ def test_usefulness_mapping():
 
 
 def test_curve_skips_unrated_and_prefers_explicit():
-    from time_machine.domain import ModelRun, TripManifest
+    from llm_time_machine.domain import ModelRun, TripManifest
 
     manifest = TripManifest(
         trip_id="c1",
@@ -158,12 +158,12 @@ def test_human_curve_evaluator_writes_curve(store, paths, diary):
             return FakeRunner()
 
         def verify_artifact(self, spec):
-            from time_machine.domain import RunnerAvailability
+            from llm_time_machine.domain import RunnerAvailability
 
             return RunnerAvailability(available=True, reason="ok")
 
         def preflight(self, spec):
-            from time_machine.domain import RunnerAvailability
+            from llm_time_machine.domain import RunnerAvailability
 
             return RunnerAvailability(available=True, reason="ok")
 
@@ -199,12 +199,12 @@ def test_decade_walk_script_and_run(store, paths):
             return FakeRunner()
 
         def verify_artifact(self, spec):
-            from time_machine.domain import RunnerAvailability
+            from llm_time_machine.domain import RunnerAvailability
 
             return RunnerAvailability(available=True, reason="ok")
 
         def preflight(self, spec):
-            from time_machine.domain import RunnerAvailability
+            from llm_time_machine.domain import RunnerAvailability
 
             return RunnerAvailability(available=True, reason="ok")
 

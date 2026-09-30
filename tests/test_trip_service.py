@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from time_machine.domain import UserAnnotations
-from time_machine.errors import InputUnsupportedError
-from time_machine.runners.fake import FakeRunner
-from time_machine.trip_service import TripService, blind_mapping_for_trip
+from llm_time_machine.domain import UserAnnotations
+from llm_time_machine.errors import InputUnsupportedError
+from llm_time_machine.runners.fake import FakeRunner
+from llm_time_machine.trip_service import TripService, blind_mapping_for_trip
 from tests.conftest import make_cohort, make_model
 
 

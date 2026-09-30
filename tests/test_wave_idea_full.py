@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from time_machine.chat_session import (
+from llm_time_machine.chat_session import (
     CHAT_DERAIL_NOTE,
     ChatService,
     ChatStore,
@@ -15,9 +15,9 @@ from time_machine.chat_session import (
     render_mistral_multi,
     render_qwen_multi,
 )
-from time_machine.config import AppPaths
-from time_machine.cohort_catalog import CohortCatalog
-from time_machine.curves_pack import (
+from llm_time_machine.config import AppPaths
+from llm_time_machine.cohort_catalog import CohortCatalog
+from llm_time_machine.curves_pack import (
     MIN_BAND_N,
     export_compare_pack,
     load_pack,
@@ -26,9 +26,9 @@ from time_machine.curves_pack import (
     save_pack,
     validate_pack,
 )
-from time_machine.diary import INDEX_SCHEMA_VERSION, DiaryStore
-from time_machine.diary_rerun import DiaryRerunService, select_rerun_models
-from time_machine.domain import (
+from llm_time_machine.diary import INDEX_SCHEMA_VERSION, DiaryStore
+from llm_time_machine.diary_rerun import DiaryRerunService, select_rerun_models
+from llm_time_machine.domain import (
     ChatTurn,
     CurvePack,
     CurvePackCurve,
@@ -36,24 +36,24 @@ from time_machine.domain import (
     JudgeScore,
     YearHole,
 )
-from time_machine.errors import ArtifactError, RegistryError
-from time_machine.evaluation_judge import JudgeService
-from time_machine.future_ensemble import (
+from llm_time_machine.errors import ArtifactError, RegistryError
+from llm_time_machine.evaluation_judge import JudgeService
+from llm_time_machine.future_ensemble import (
     FutureEnsemble,
     future_enabled,
     future_mark_first_solved_allowed,
     member_models,
 )
-from time_machine.judge_calibration import (
+from llm_time_machine.judge_calibration import (
     DEFAULT_CALIBRATION,
     build_report,
     heuristic_gold_for_tests,
     write_report,
 )
-from time_machine.judge_prompts import load_rubric, parse_judge_reply
-from time_machine.registry import validate_cohort_dict
-from time_machine.trip_controller import TripController
-from time_machine.runners.fake import FakeRunner
+from llm_time_machine.judge_prompts import load_rubric, parse_judge_reply
+from llm_time_machine.registry import validate_cohort_dict
+from llm_time_machine.trip_controller import TripController
+from llm_time_machine.runners.fake import FakeRunner
 from tests.conftest import REPO_ROOT, make_cohort, make_model
 
 
@@ -67,12 +67,12 @@ class FakeFactory:
         return FakeRunner()
 
     def verify_artifact(self, spec):
-        from time_machine.domain import RunnerAvailability
+        from llm_time_machine.domain import RunnerAvailability
 
         return RunnerAvailability(available=True, reason="ok")
 
     def preflight(self, spec):
-        from time_machine.domain import RunnerAvailability
+        from llm_time_machine.domain import RunnerAvailability
 
         return RunnerAvailability(available=True, reason="ok")
 
@@ -247,7 +247,7 @@ def test_diary_ics_stub_has_no_email():
             e.entry_id = entry_id
             return e
 
-    from time_machine.diary_rerun import DiaryRerunService
+    from llm_time_machine.diary_rerun import DiaryRerunService
 
     svc = DiaryRerunService(_D(), None, make_cohort())
     ics = svc.ics_reminder_stub("d-x")
@@ -281,7 +281,7 @@ def test_rubric_v2_and_judge_v2_load():
     rubric = load_rubric(REPO_ROOT / "registry" / "judges" / "rubric-v2.yaml")
     assert rubric["id"] == "judge-rubric-v2"
     assert rubric.get("parse_mode") == "json"
-    from time_machine.judge_prompts import load_judge_config
+    from llm_time_machine.judge_prompts import load_judge_config
 
     cfg = load_judge_config(REPO_ROOT / "registry" / "judges" / "judge-v2.yaml")
     assert cfg["rubric_id"] == "judge-rubric-v2"
@@ -298,7 +298,7 @@ def test_judge_prefers_v2_and_caches(paths: AppPaths, store, cohort):
             class R:
                 def generate(self, prepared, spec, config):
                     calls["n"] += 1
-                    from time_machine.domain import GenerationResult, RuntimeInfo
+                    from llm_time_machine.domain import GenerationResult, RuntimeInfo
 
                     return GenerationResult(
                         output_text='{"score": 7}',
@@ -441,7 +441,7 @@ def test_chat_service_multi_turn_export(paths: AppPaths, cohort):
         def create_for_spec(self, spec):
             class R:
                 def generate(self, prepared, spec, config):
-                    from time_machine.domain import GenerationResult, RuntimeInfo
+                    from llm_time_machine.domain import GenerationResult, RuntimeInfo
 
                     return GenerationResult(
                         output_text=f"echo:{prepared.prepared_text[-20:]}",
@@ -499,7 +499,7 @@ def test_future_ensemble_selects_and_quarantines(cohort):
         n_seeds=2,
     ) if cohort.future else None
     if cohort.future is None:
-        from time_machine.domain import FutureSlot
+        from llm_time_machine.domain import FutureSlot
 
         cohort.future = FutureSlot(
             enabled=True,
@@ -515,7 +515,7 @@ def test_future_ensemble_selects_and_quarantines(cohort):
         def create_for_spec(self, spec):
             class R:
                 def generate(self, prepared, spec, config):
-                    from time_machine.domain import GenerationResult, RuntimeInfo
+                    from llm_time_machine.domain import GenerationResult, RuntimeInfo
 
                     return GenerationResult(
                         output_text="x" * (10 + config.seed % 5),
@@ -527,7 +527,7 @@ def test_future_ensemble_selects_and_quarantines(cohort):
 
             return R()
 
-    from time_machine.prompt_adapters import prepare_input
+    from llm_time_machine.prompt_adapters import prepare_input
 
     ens = FutureEnsemble(cohort, _Factory())
     result = ens.run("hi", prepare_fn=prepare_input, block_network_during_trip=False)
@@ -559,7 +559,7 @@ def test_calibration_report_bias_visible(paths: AppPaths):
 
 
 def test_spine_rows_include_holes_and_models():
-    from time_machine.ui.timeline import spine_rows
+    from llm_time_machine.ui.timeline import spine_rows
 
     catalog = CohortCatalog(REPO_ROOT)
     cohort = catalog.load("decade-v0")

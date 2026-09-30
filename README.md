@@ -1,4 +1,4 @@
-# Old Weights
+# LLMTimeMachine
 
 **One weird prompt, ten years of LLMs.**
 
@@ -82,7 +82,7 @@ Sidebar runner: **composite** (default) runs the full trip (transformers + llama
 uv run python scripts/run_real_smoke.py "Do a super ultra deep analysis into the apple's design system"
 ```
 
-Tiny 3-model fallback (~3 GB): `scripts/preload_lite.py` + `TIME_MACHINE_COHORT=registry/cohort-lite-v1.yaml`.
+Tiny 3-model fallback (~3 GB): `scripts/preload_lite.py` + `LLM_TIME_MACHINE_COHORT=registry/cohort-lite-v1.yaml`.
 
 ## Real models (optional)
 
@@ -91,8 +91,8 @@ Tiny 3-model fallback (~3 GB): `scripts/preload_lite.py` + `TIME_MACHINE_COHORT=
 uv sync --extra inference
 
 # Download ONLY registry-pinned artifacts (never triggered by a user prompt)
-uv run old-weights preload
-uv run old-weights preflight
+uv run llmtimemachine preload
+uv run llmtimemachine preflight
 ```
 
 Then set the sidebar runner to `composite` (default), `transformers`, or `quantized` in the UI (`fake` needs no weights). Without preloaded weights the app reports each model as unsupported instead of silently substituting another checkpoint.
@@ -102,20 +102,22 @@ Quantized GGUF path (optional extra `quantized`) uses llama.cpp and the adapter-
 ## CLI
 
 ```bash
-uv run old-weights preflight
-uv run old-weights preload
-uv run old-weights run-fake --prompt "Your idea here"
-uv run old-weights export --trip-id <id> --format zip
-uv run old-weights delete --trip-id <id>
-uv run old-weights delete --all --confirm DELETE-ALL
+uv run llmtimemachine preflight
+uv run llmtimemachine preload
+uv run llmtimemachine run-fake --prompt "Your idea here"
+uv run llmtimemachine export --trip-id <id> --format zip
+uv run llmtimemachine delete --trip-id <id>
+uv run llmtimemachine delete --all --confirm DELETE-ALL
 ```
+
+Legacy `old-weights` command and `TIME_MACHINE_*` env vars still work as aliases.
 
 ## Privacy and safety
 
 - Streamlit must bind to `127.0.0.1` (documented launch command).
 - No paid API, no remote inference during a trip, no telemetry.
 - Prompts and outputs live under `local-data/` (gitignored).
-- Default logs omit raw prompt/output text. `TIME_MACHINE_DEBUG_CONTENT=1` enables dev content dumping and warns first.
+- Default logs omit raw prompt/output text. `LLM_TIME_MACHINE_DEBUG_CONTENT=1` enables dev content dumping and warns first.
 - Historical outputs are shown unpolished; they can be incoherent, biased, or unsafe.
 
 ## Tests
@@ -133,7 +135,7 @@ app.py                     Streamlit UI (loopback)
 idea.md                    Gwern's time-travel proposal (source idea)
 scr.png                    Decade-spine screenshot used above
 registry/                  Cohorts (decade-v0 default, five-era, local-v1, lite) + judges + visible adapters
-src/time_machine/          Domain, store, runners, diary/curves/chat/future/pack/judge services, UI modules
+src/llm_time_machine/          Domain, store, runners, diary/curves/chat/future/pack/judge services, UI modules
 prompts/starter_prompts.jsonl
 scripts/                   preload_five_era, preload_lite, run_real_smoke, smoke_adapters
 tests/                     pytest (fake + contract + phase_a/b + wave + deep_protocol)

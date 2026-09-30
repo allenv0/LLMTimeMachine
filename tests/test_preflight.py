@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from time_machine.domain import UserAnnotations
-from time_machine.preflight import (
+from llm_time_machine.domain import UserAnnotations
+from llm_time_machine.preflight import (
     assess_model,
     hardware_summary,
     recommend_profile,
 )
-from time_machine.ui import prompt_form, progress
-from time_machine.trip_service import TripService
-from time_machine.runners.fake import FakeRunner
+from llm_time_machine.ui import prompt_form, progress
+from llm_time_machine.trip_service import TripService
+from llm_time_machine.runners.fake import FakeRunner
 from tests.conftest import make_cohort, make_model
 
 
@@ -36,7 +36,7 @@ def test_assess_model_missing_artifact(paths):
 
 
 def test_assess_model_present(paths, monkeypatch):
-    from time_machine import preflight as pf
+    from llm_time_machine import preflight as pf
 
     monkeypatch.setattr(pf, "recommend_profile", lambda mem, kind: "standard")
     monkeypatch.setattr(pf, "detect_memory_bytes", lambda: 32 * 1024**3)
@@ -49,7 +49,7 @@ def test_assess_model_present(paths, monkeypatch):
 
 
 def test_assess_model_profile_mismatch(paths, monkeypatch):
-    from time_machine import preflight as pf
+    from llm_time_machine import preflight as pf
 
     monkeypatch.setattr(pf, "recommend_profile", lambda mem, kind: "lite")
     spec = make_model("m1")  # hardware_profile standard

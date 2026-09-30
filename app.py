@@ -1,4 +1,4 @@
-"""Old Weights — local Streamlit entrypoint (thin UI shell).
+"""LLMTimeMachine — local Streamlit entrypoint (thin UI shell).
 
 Launch (loopback only):
 
@@ -15,21 +15,21 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import streamlit as st
 
-from time_machine import __version__
-from time_machine.artifact_store import ArtifactStore
-from time_machine.config import APP_NAME, default_paths, debug_content_enabled
-from time_machine.cohort_catalog import CohortCatalog
-from time_machine.chat_session import ChatService, ChatStore
-from time_machine.curves import build_trip_curve, write_curve
-from time_machine.diary import DiaryStore
-from time_machine.diary_rerun import DiaryRerunService
-from time_machine.domain import UserAnnotations
-from time_machine.evaluation_human import HumanCurveEvaluator
-from time_machine.evaluation_judge import JudgeService
-from time_machine.preflight import hardware_summary
-from time_machine.trip_controller import TripController
-from time_machine.runners.factory import RunnerFactory
-from time_machine.ui import (
+from llm_time_machine import __version__
+from llm_time_machine.artifact_store import ArtifactStore
+from llm_time_machine.config import APP_NAME, default_paths, debug_content_enabled
+from llm_time_machine.cohort_catalog import CohortCatalog
+from llm_time_machine.chat_session import ChatService, ChatStore
+from llm_time_machine.curves import build_trip_curve, write_curve
+from llm_time_machine.diary import DiaryStore
+from llm_time_machine.diary_rerun import DiaryRerunService
+from llm_time_machine.domain import UserAnnotations
+from llm_time_machine.evaluation_human import HumanCurveEvaluator
+from llm_time_machine.evaluation_judge import JudgeService
+from llm_time_machine.preflight import hardware_summary
+from llm_time_machine.trip_controller import TripController
+from llm_time_machine.runners.factory import RunnerFactory
+from llm_time_machine.ui import (
     blind_compare,
     chat as chat_ui,
     curves as curves_ui,
@@ -101,7 +101,7 @@ def main() -> None:
     paths, catalog, cohort, store, factory, diary, judge, chat_store, chat = load_static()
 
     if debug_content_enabled():
-        st.warning("Development content logging is enabled (TIME_MACHINE_DEBUG_CONTENT).")
+        st.warning("Development content logging is enabled (LLM_TIME_MACHINE_DEBUG_CONTENT).")
 
     landing.render_landing(st, paths.protocol_path, cohort)
     if cohort.cohort_id != "local-v1":

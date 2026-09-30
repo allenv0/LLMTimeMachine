@@ -7,12 +7,12 @@ from pathlib import Path
 import pytest
 import yaml
 
-from time_machine.artifact_store import ArtifactStore
-from time_machine.config import AppPaths
-from time_machine.domain import Cohort, GenerationConfig, ModelSpec
-from time_machine.registry import validate_cohort_dict
-from time_machine.runners.fake import FakeRunner
-from time_machine.trip_service import TripService
+from llm_time_machine.artifact_store import ArtifactStore
+from llm_time_machine.config import AppPaths
+from llm_time_machine.domain import Cohort, GenerationConfig, ModelSpec
+from llm_time_machine.registry import validate_cohort_dict
+from llm_time_machine.runners.fake import FakeRunner
+from llm_time_machine.trip_service import TripService
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

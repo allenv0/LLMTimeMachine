@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from time_machine.errors import InputUnsupportedError
-from time_machine.prompt_adapters import (
+from llm_time_machine.errors import InputUnsupportedError
+from llm_time_machine.prompt_adapters import (
     CHAT_MISTRAL_TEMPLATE,
     CHAT_QWEN_TEMPLATE,
     CONTINUATION_TEMPLATE,

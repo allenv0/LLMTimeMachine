@@ -8,11 +8,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from time_machine.artifact_store import ArtifactStore
-from time_machine.config import default_paths
-from time_machine.registry import load_cohort
-from time_machine.trip_controller import TripController
-from time_machine.runners.factory import RunnerFactory
+from llm_time_machine.artifact_store import ArtifactStore
+from llm_time_machine.config import default_paths
+from llm_time_machine.registry import load_cohort
+from llm_time_machine.trip_controller import TripController
+from llm_time_machine.runners.factory import RunnerFactory
 
 
 def main() -> int:

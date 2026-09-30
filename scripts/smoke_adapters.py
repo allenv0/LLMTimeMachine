@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, "src")
-from time_machine.prompt_adapters import prepare_input
-from time_machine.registry import load_cohort
+from llm_time_machine.prompt_adapters import prepare_input
+from llm_time_machine.registry import load_cohort
 
 c = load_cohort("registry/cohort-local-v1.yaml")
 m = [x for x in c.models if x.id == "qwen25-7b-instruct-2024"][0]
