@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 APP_NAME = "LLMTimeMachine"
-APP_TAGLINE = "One weird prompt, ten years of LLMs."
+APP_TAGLINE = "Your prompt, answered by a decade of AI."
 TRUTHFUL_CLAIM = (
     "A laptop-compatible, auditable sample of LLM history. "
     "It is not a verified record of the best model in every year."

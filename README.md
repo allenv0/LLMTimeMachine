@@ -1,6 +1,6 @@
 # LLMTimeMachine
 
-**One weird prompt, ten years of LLMs.**
+**Your prompt, answered by a decade of AI. A time machine for language models — board the lineup year by year and get your prompt answered by the model of its era, from GPT-2 to the frontier. (Work in progress).**
 
 ![Time table — decade spine with honest holes and labeled substitutes](scr.png)
 
