@@ -20,7 +20,8 @@ def render_decade_walk(
     st.markdown(theme.section("Decade walk", "one stop at a time · simulated lived time"), unsafe_allow_html=True)
     st.caption(
         "Reveal one year at a time and leave a reflection. "
-        "This is theater over real checkpoints — not calendar time. Newer is not always better."
+        "This is theater over real checkpoints — not calendar time. Newer is not always better. "
+        "The hero rail above tracks your playhead: revealed years fill in, the next stop pulses."
     )
 
     models = walk_models(cohort)

@@ -1,0 +1,21 @@
+{
+  "name": "llmtimemachine-lifeline-rail",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portable Lifeline-style hero rail for LLMTimeMachine. Markers JSON comes from src/llm_time_machine/ui/timeline.py::lifeline_markers. MIT port of evilrabbit/lifeline rail logic.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "vite": "^6",
+    "@vitejs/plugin-react": "^4"
+  }
+}

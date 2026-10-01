@@ -93,19 +93,19 @@ def _svg_estimated(scored: list[JudgeScore]) -> str:
         x = x_of(s.display_year or 0)
         y = y_of(int(s.score_1_10 or 1))
         dots.append(
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="#6b4c9a"/>'
-            f'<text x="{x:.1f}" y="{y - 8:.1f}" text-anchor="middle" font-size="11" fill="#1a1a1a">'
+            f'<circle class="s-est" cx="{x:.1f}" cy="{y:.1f}" r="4"/>'
+            f'<text class="t-lab" x="{x:.1f}" y="{y - 8:.1f}" text-anchor="middle" font-size="11">'
             f"{s.display_year}:{s.score_1_10}</text>"
         )
     return (
-        f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" '
+        f'<svg class="tm-chart" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" '
         f'font-family="-apple-system, sans-serif" style="max-width:100%;height:auto;">'
-        f'<text x="8" y="{y_of(10) + 4}" font-size="10" fill="#666">10</text>'
-        f'<text x="8" y="{y_of(5) + 4}" font-size="10" fill="#666">5</text>'
-        f'<text x="8" y="{y_of(1) + 4}" font-size="10" fill="#666">1</text>'
-        + (f'<polyline points="{coords}" fill="none" stroke="#6b4c9a" stroke-width="2"/>' if len(pts) >= 2 else "")
+        f'<text class="t-axis" x="8" y="{y_of(10) + 4}" font-size="10">10</text>'
+        f'<text class="t-axis" x="8" y="{y_of(5) + 4}" font-size="10">5</text>'
+        f'<text class="t-axis" x="8" y="{y_of(1) + 4}" font-size="10">1</text>'
+        + (f'<polyline class="s-est" points="{coords}" fill="none" stroke-width="2"/>' if len(pts) >= 2 else "")
         + "".join(dots)
-        + f'<text x="{w/2}" y="{h-6}" text-anchor="middle" font-size="10" fill="#666">year → estimated score</text>'
+        + f'<text class="t-axis" x="{w/2}" y="{h-6}" text-anchor="middle" font-size="10">year → estimated score</text>'
         f"</svg>"
     )
 

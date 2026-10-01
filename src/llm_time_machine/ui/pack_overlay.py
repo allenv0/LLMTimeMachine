@@ -124,11 +124,11 @@ def _svg_overlay(my_points: list[dict], overlay: dict) -> str:
         return pad_t + (1 - t) * (h - pad_t - pad_b)
 
     parts = [
-        f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" '
+        f'<svg class="tm-chart" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" '
         f'font-family="-apple-system, sans-serif" style="max-width:100%;height:auto;">',
-        f'<text x="8" y="{y10(10) + 4}" font-size="10" fill="#666">10</text>',
-        f'<text x="8" y="{y10(5) + 4}" font-size="10" fill="#666">5</text>',
-        f'<text x="8" y="{y10(1) + 4}" font-size="10" fill="#666">1</text>',
+        f'<text class="t-axis" x="8" y="{y10(10) + 4}" font-size="10">10</text>',
+        f'<text class="t-axis" x="8" y="{y10(5) + 4}" font-size="10">5</text>',
+        f'<text class="t-axis" x="8" y="{y10(1) + 4}" font-size="10">1</text>',
     ]
 
     # IQR band
@@ -139,11 +139,11 @@ def _svg_overlay(my_points: list[dict], overlay: dict) -> str:
             f"{x_of(b['year']):.1f},{y10(float(b['q1'])):.1f}" for b in reversed(band)
         )
         parts.append(
-            f'<polygon points="{upper} {lower}" fill="#cbb8e8" fill-opacity="0.35" stroke="none"/>'
+            f'<polygon class="s-band" points="{upper} {lower}" stroke="none"/>'
         )
         med = " ".join(f"{x_of(b['year']):.1f},{y10(float(b['median'])):.1f}" for b in band)
         parts.append(
-            f'<polyline points="{med}" fill="none" stroke="#6b4c9a" stroke-width="1.5" stroke-dasharray="4 2"/>'
+            f'<polyline class="s-est" points="{med}" fill="none" stroke-width="1.5" stroke-dasharray="4 2"/>'
         )
 
     # Pack spaghetti
@@ -155,7 +155,7 @@ def _svg_overlay(my_points: list[dict], overlay: dict) -> str:
             f"{x_of(int(p['year'])):.1f},{y10(float(p['score_1_10'])):.1f}" for p in pts
         )
         parts.append(
-            f'<polyline points="{coords}" fill="none" stroke="#9b7bb8" stroke-width="1" stroke-opacity="0.45"/>'
+            f'<polyline class="s-pack" points="{coords}" fill="none" stroke-width="1" stroke-opacity="0.45"/>'
         )
 
     # My line (map ordinal -2..2 to 1..10 band if needed, else use score_1_10)
@@ -171,14 +171,14 @@ def _svg_overlay(my_points: list[dict], overlay: dict) -> str:
         my_coords.append(f"{x_of(year):.1f},{yy:.1f}")
     if len(my_coords) >= 2:
         parts.append(
-            f'<polyline points="{" ".join(my_coords)}" fill="none" stroke="#2f6f4e" stroke-width="2.5"/>'
+            f'<polyline class="s-human" points="{" ".join(my_coords)}" fill="none" stroke-width="2.5"/>'
         )
     for coord in my_coords:
         x_s, y_s = coord.split(",")
-        parts.append(f'<circle cx="{x_s}" cy="{y_s}" r="4" fill="#2f6f4e"/>')
+        parts.append(f'<circle class="s-human" cx="{x_s}" cy="{y_s}" r="4"/>')
 
     parts.append(
-        f'<text x="{w / 2}" y="{h - 6}" text-anchor="middle" font-size="10" fill="#666">'
+        f'<text class="t-axis" x="{w / 2}" y="{h - 6}" text-anchor="middle" font-size="10">'
         f"year → (pack scores 1–10; your line may be ordinal −2…+2)</text>"
     )
     parts.append("</svg>")

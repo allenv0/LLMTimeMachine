@@ -97,11 +97,40 @@ def _save_curve(paths, store, cohort, trip_id: str, annotations: UserAnnotations
     return len(points)
 
 
+def toggle_appearance() -> None:
+    """Flip light<->dark. A callback so the click is consumed before rerun.
+
+    The sidebar radio has its own widget key, so both are written here to
+    keep them from disagreeing: Streamlit ignores a radio's `index` once the
+    widget holds a stored value, meaning the radio would otherwise drift
+    away from the quick toggle.
+    """
+    current = st.session_state.get("appearance", "auto")
+    nxt = "light" if current == "dark" else "dark"
+    st.session_state["appearance"] = nxt
+    st.session_state["appearance-pick"] = nxt.capitalize()
+
+
 def main() -> None:
     paths, catalog, cohort, store, factory, diary, judge, chat_store, chat = load_static()
 
     if debug_content_enabled():
         st.warning("Development content logging is enabled (LLM_TIME_MACHINE_DEBUG_CONTENT).")
+
+    # Theme toggle, top of page. Quick Dark on/off; the sidebar Appearance
+    # radio keeps full Auto / Light / Dark control. Uses on_click so the
+    # click is consumed before the rerun — mutating state then calling
+    # st.rerun() from inside a keyed button re-reads the click as True and
+    # ping-pongs the mode instead of settling.
+    _top_spacer, _top_theme = st.columns([5, 2])
+    with _top_theme:
+        _is_dark = st.session_state.get("appearance", "auto") == "dark"
+        st.button(
+            "Switch to light mode" if _is_dark else "Switch to dark mode",
+            key="appearance-toggle",
+            use_container_width=True,
+            on_click=toggle_appearance,
+        )
 
     landing.render_landing(st, paths.protocol_path, cohort)
     if cohort.cohort_id != "local-v1":
@@ -122,7 +151,30 @@ def main() -> None:
             active_year = min(years) if years else None
         except Exception:
             active_year = None
-    timeline_ui.render_decade_spine(st, cohort, active_year=active_year)
+    # Walk-first boarding (hero scope): Decade walk is the default entry;
+    # Full trip is one toggle away. Walk playhead comes from the walk UI state.
+    if "timeline_mode" not in st.session_state:
+        st.session_state["timeline_mode"] = "walk"
+    _mode_choice = st.radio(
+        "Boarding",
+        ["Decade walk", "Full trip"],
+        index=0 if st.session_state.get("timeline_mode", "walk") == "walk" else 1,
+        horizontal=True,
+        help="Decade walk reveals one year at a time with reflections. Full trip runs all eras at once.",
+    )
+    st.session_state["timeline_mode"] = "walk" if _mode_choice == "Decade walk" else "full"
+    _walk_step = st.session_state.get("walk_step", 0)
+    try:
+        _walk_step = max(0, int(_walk_step))
+    except Exception:
+        _walk_step = 0
+    timeline_ui.render_decade_spine(
+        st,
+        cohort,
+        active_year=active_year,
+        walk_step=_walk_step,
+        mode=st.session_state["timeline_mode"],
+    )
     st.markdown(theme.rule(), unsafe_allow_html=True)
 
     with st.sidebar:
@@ -136,6 +188,21 @@ def main() -> None:
             key="runner_mode",
             help="composite = transformers + llama.cpp by backend. fake = no weights.",
         )
+        if "appearance-pick" not in st.session_state:
+            # Seed the widget before it is created; passing `index=` alongside a
+            # pre-seeded key is a Streamlit policy violation, and `index` is
+            # ignored anyway once the widget holds a stored value.
+            st.session_state["appearance-pick"] = st.session_state.get(
+                "appearance", "auto"
+            ).capitalize()
+        appearance = st.radio(
+            "Appearance",
+            ["Auto", "Light", "Dark"],
+            key="appearance-pick",
+            horizontal=True,
+            help="Auto follows your OS setting. Dark is newsprint after dark.",
+        )
+        st.session_state["appearance"] = appearance.lower()
         if st.checkbox("Show preflight", value=False):
             st.json(hardware_summary(paths))
         st.markdown(
@@ -217,14 +284,14 @@ def main() -> None:
         if not trip_models:
             trip_models = list(cohort.models)
 
-        tab_results, tab_curve, tab_judge, tab_blind, tab_diary, tab_walk, tab_chat, tab_data = st.tabs(
+        tab_results, tab_walk, tab_curve, tab_judge, tab_blind, tab_diary, tab_chat, tab_data = st.tabs(
             [
                 "Results",
+                "Decade walk",
                 "Progress curve",
                 "Judge estimate",
                 "Blind compare",
                 "Diary",
-                "Decade walk",
                 "Playground chat",
                 "Local data",
             ]
@@ -294,9 +361,9 @@ def main() -> None:
         with tab_data:
             local_data.render_local_data_panel(st, store, trip_id=trip_id)
     else:
-        # Decade spine is already the hero above; tabs stay for work surfaces.
-        tab_diary, tab_walk, tab_chat, tab_data = st.tabs(
-            ["Diary", "Decade walk", "Playground chat", "Local data"]
+        # Walk-first: the decade walk is the default entry, diary second.
+        tab_walk, tab_diary, tab_chat, tab_data = st.tabs(
+            ["Decade walk", "Diary", "Playground chat", "Local data"]
         )
         with tab_diary:
             diary_ui.render_diary_panel(st, diary, active_trip_id=None, raw_prompt="")

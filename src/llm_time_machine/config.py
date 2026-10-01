@@ -8,8 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-APP_NAME = "LLMTimeMachine"
-APP_TAGLINE = "Your prompt, answered by a decade of AI."
+APP_NAME = "LLM TimeMachine"
+APP_TAGLINE = "A time machine for language models — board the lineup year by year and get your prompt answered by the model of its era, from GPT-2 to the frontier."
 TRUTHFUL_CLAIM = (
     "A laptop-compatible, auditable sample of LLM history. "
     "It is not a verified record of the best model in every year."

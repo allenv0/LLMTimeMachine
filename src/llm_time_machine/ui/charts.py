@@ -25,7 +25,7 @@ def chart_frame(
         f'<div class="tm-fade">'
         f"{theme.figure_caption(fig, escape(caption))}"
         f"{legend_html}"
-        f'<svg viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg" '
+        f'<svg class="tm-chart" viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg" '
         f'font-family="{FONT}" style="max-width:100%;height:auto;" role="img" '
         f'aria-label="{escape(title, quote=True)}">'
         f"{svg_inner}"
@@ -56,6 +56,15 @@ def human_series(points: list[tuple[int, float]], y_fn) -> str:
     return ""
 
 
+# Series hex (as passed via `stroke`) → theme class, so dark mode can
+# recolor lines without touching builders. Unknown strokes keep their attr.
+_SERIES_CLASS = {
+    "#2f6f4e": "s-human",
+    "#6b4c9a": "s-est",
+    "#9b7bb8": "s-pack",
+}
+
+
 def polyline_and_dots(
     points: list[tuple[float, float, str]],
     *,
@@ -67,19 +76,29 @@ def polyline_and_dots(
     """points: (x, y, label). Breaks not required if caller splits segments."""
     if not points:
         return ""
+    series = _SERIES_CLASS.get(stroke.lower(), "")
+    cls = f' class="{series}"' if series else ""
     coords = " ".join(f"{x:.1f},{y:.1f}" for x, y, _ in points)
     line = (
-        f'<polyline points="{coords}" fill="none" stroke="{stroke}" stroke-width="{width}" '
+        f'<polyline{cls} points="{coords}" fill="none" stroke="{stroke}" stroke-width="{width}" '
         f'stroke-linejoin="round"/>'
         if len(points) >= 2
         else ""
     )
     dots = []
     for x, y, label in points:
-        fill = stroke if filled else "#FFFCF8"
+        if filled:
+            dots.append(
+                f'<circle{cls} cx="{x:.1f}" cy="{y:.1f}" r="4" fill="{stroke}" '
+                f'stroke="{stroke}" stroke-width="1.5"/>'
+            )
+        else:
+            dots.append(
+                f'<circle class="s-hollow" cx="{x:.1f}" cy="{y:.1f}" r="4" '
+                f'stroke="{stroke}" stroke-width="1.5"/>'
+            )
         dots.append(
-            f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="{fill}" stroke="{stroke}" stroke-width="1.5"/>'
-            f'<text x="{x:.1f}" y="{y - 9:.1f}" text-anchor="middle" font-size="11" fill="#1C1B19">'
+            f'<text class="t-lab" x="{x:.1f}" y="{y - 9:.1f}" text-anchor="middle" font-size="11">'
             f"{label_prefix}{escape(label)}</text>"
         )
     return line + "".join(dots)

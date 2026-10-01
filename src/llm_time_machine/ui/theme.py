@@ -45,6 +45,7 @@ CSS = """
     --tm-accent-ink: #A35F14;
     --tm-hole: #A39A8E;
     --tm-danger: #8B3A2F;
+    --tm-danger-soft: #FBF0EE;
     --tm-ok: #2F6F4E;
     --tm-serif: __SERIF__;
     --tm-sans: __SANS__;
@@ -70,6 +71,9 @@ CSS = """
   [data-testid="stMainBlockContainer"] {
     padding-left: 1.25rem !important;
     padding-right: 1.25rem !important;
+    /* Clear Streamlit's fixed header bar (see pointer-events note below).
+       Without this the first block sits underneath the header. */
+    padding-top: 3.25rem !important;
     gap: 0.85rem !important;
   }
   .block-container {
@@ -122,6 +126,14 @@ CSS = """
     font-size: 0.84rem;
   }
   [data-testid="stHeader"] { background: transparent; }
+  /* Streamlit's header is a fixed, full-width bar painted ON TOP of the first
+     block of content. We make it transparent but, left hit-testable, it
+     silently swallows clicks on anything at the top of the page — the theme
+     toggle looked dead while its state logic worked fine. We hide the toolbar
+     anyway, so the chrome should not intercept pointer events at all. */
+  [data-testid="stHeader"],
+  [data-testid="stToolbar"],
+  [data-testid="stDecoration"] { pointer-events: none !important; }
   [data-testid="stToolbar"] { display: none; }
 
   /* ——— masthead (old newspaper) ——— */
@@ -451,47 +463,93 @@ CSS = """
     background: transparent;
     border-left-style: dashed;
   }
-  .tm-hole-line {
-    color: var(--tm-ink-muted);
-    font-size: 0.88rem;
-    width: 100%;
-    max-width: none;
-    line-height: 1.45;
-    margin: 0 0 0.15rem;
-  }
-  .tm-model-line {
-    font-size: 0.95rem;
-    width: 100%;
-    max-width: none;
-    line-height: 1.45;
-    margin: 0 0 0.15rem;
-  }
-
-  /* Stop notes: full-width editorial rows in a 2-col newspaper grid when wide */
+  /* Stop notes: ledger of stations — year gutter + breathing room.
+     Rules used to sit under every grid cell, so they never lined up across
+     the two columns. Now separation comes from whitespace; only quarantined
+     endpoints keep a rule. Each note is one idea: year, name, what it stands
+     for, its limits — stacked, never run on. */
   .tm-stop-notes {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0.55rem 1.75rem;
+    gap: 1rem;
     width: 100%;
-    margin: 0.35rem 0 0.85rem;
+    margin: 0.6rem 0 1rem;
+    max-width: 70rem;
   }
   @media (min-width: 960px) {
     .tm-stop-notes {
       grid-template-columns: 1fr 1fr;
-      gap: 0.65rem 2rem;
+      gap: 1.1rem 2.5rem;
     }
     .tm-stop-notes > .tm-note-wide {
       grid-column: 1 / -1;
     }
   }
-  .tm-stop-notes > div {
+  .tm-stop-note {
+    display: grid;
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    gap: 0 0.8rem;
+    align-items: start;
     min-width: 0;
-    padding-bottom: 0.45rem;
-    border-bottom: 1px solid var(--tm-line);
   }
-  .tm-stop-notes > div:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
+  .tm-stop-note-year {
+    font-family: var(--tm-serif);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--tm-ink);
+  }
+  .tm-stop-note.is-hole .tm-stop-note-year {
+    color: var(--tm-hole);
+    font-weight: 600;
+  }
+  .tm-stop-note-body {
+    min-width: 0;
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+  .tm-stop-note-name {
+    font-weight: 650;
+    color: var(--tm-ink);
+  }
+  .tm-stop-note.is-hole .tm-stop-note-name {
+    font-weight: 500;
+    font-style: italic;
+    color: var(--tm-ink-muted);
+  }
+  .tm-stop-note-chips {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-left: 0.45rem;
+    vertical-align: middle;
+  }
+  .tm-stop-note-sub {
+    color: var(--tm-ink-muted);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    margin-top: 0.3rem;
+  }
+  .tm-stop-note-sub + .tm-stop-note-sub {
+    margin-top: 0.2rem;
+  }
+  .tm-stop-note-sub strong {
+    color: var(--tm-ink);
+    font-weight: 600;
+  }
+  .tm-stop-note.is-hole .tm-stop-note-sub strong {
+    color: var(--tm-ink-muted);
+  }
+  /* Legacy single-line classes (kept working, no longer emitted). */
+  .tm-hole-line {
+    color: var(--tm-ink-muted);
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+  .tm-model-line {
+    font-size: 0.92rem;
+    line-height: 1.55;
   }
 
   /* ——— departure board (progress) ——— */
@@ -613,11 +671,11 @@ CSS = """
     border-radius: var(--tm-radius-sm);
     border-color: var(--tm-line);
   }
-  [data-testid="stTabs"] [data-baseweb="tab-list"] {
+  [data-testid="stTabs"] [role="tablist"] {
     gap: 0.15rem;
     border-bottom: 2px solid var(--tm-ink);
   }
-  [data-testid="stTabs"] [data-baseweb="tab"] {
+  [data-testid="stTabs"] [role="tab"] {
     height: 2.35rem;
     background: transparent;
     border: none;
@@ -649,6 +707,187 @@ CSS = """
     border-radius: var(--tm-radius-sm);
     border-width: 1px;
   }
+
+  /* ——— form fields ———
+     Streamlit compiles config.toml's theme into emotion at STARTUP and
+     exposes no custom properties for it, so the only lever on its own widget
+     surfaces is CSS that out-specifies emotion — hence !important everywhere
+     in this section. The selectors are the real Streamlit 1.64 test ids;
+     there are no [data-baseweb] attributes in this version (that was the
+     old baseweb build, and every rule written against it was dead).
+     Everything here is var()-driven, so fields follow the palette in light,
+     dark and auto without a second copy. */
+  [data-testid="stTextInputRootElement"],
+  [data-testid="stTextAreaRootElement"] {
+    background-color: var(--tm-paper-2) !important;
+    border: 1px solid var(--tm-line) !important;
+    border-radius: var(--tm-radius-sm) !important;
+  }
+  /* the editable elements themselves: transparent so the field box shows
+     through, and ink text so typing is legible on the box's own value. */
+  [data-testid="stTextInputField"],
+  [data-testid="stTextAreaRootElement"] textarea,
+  [data-testid="stChatInput"] textarea,
+  [data-testid="stSidebar"] textarea {
+    background-color: transparent !important;
+    color: var(--tm-ink) !important;
+    /* Safari resolves -webkit-text-fill-color ahead of `color`; without this
+       the caret text can stay the startup theme's ink on a dark field. */
+    -webkit-text-fill-color: var(--tm-ink) !important;
+    caret-color: var(--tm-accent) !important;
+  }
+  [data-testid="stTextInputField"]::placeholder,
+  [data-testid="stTextAreaRootElement"] textarea::placeholder,
+  [data-testid="stChatInput"] textarea::placeholder {
+    color: var(--tm-ink-muted) !important;
+    -webkit-text-fill-color: var(--tm-ink-muted) !important;
+    opacity: 1 !important;
+  }
+  /* focus is the state you actually see while typing: keep the field dark and
+     ring it in ochre instead of letting emotion repaint the box. */
+  [data-testid="stTextInputRootElement"]:focus-within,
+  [data-testid="stTextAreaRootElement"]:focus-within {
+    background-color: var(--tm-paper-2) !important;
+    border-color: var(--tm-accent) !important;
+    box-shadow: 0 0 0 2px var(--tm-accent-soft) !important;
+  }
+  [data-testid="stTextInputField"]:focus,
+  [data-testid="stTextAreaRootElement"] textarea:focus {
+    background-color: transparent !important;
+    color: var(--tm-ink) !important;
+    -webkit-text-fill-color: var(--tm-ink) !important;
+    outline: none !important;
+  }
+  /* selectbox: control box, then the dropdown, which is portaled to <body>
+     and therefore outside .stApp — it needs its own rule. */
+  [data-testid="stSelectbox"] > div > div {
+    background-color: var(--tm-paper-2) !important;
+    border: 1px solid var(--tm-line) !important;
+    border-radius: var(--tm-radius-sm) !important;
+  }
+  [data-testid="stSelectbox"] input[role="combobox"] {
+    background-color: transparent !important;
+    color: var(--tm-ink) !important;
+    -webkit-text-fill-color: var(--tm-ink) !important;
+    caret-color: var(--tm-accent) !important;
+  }
+  [data-testid="stSelectbox"] input[role="combobox"]::placeholder {
+    color: var(--tm-ink-muted) !important;
+    -webkit-text-fill-color: var(--tm-ink-muted) !important;
+  }
+  [data-testid="stSelectbox"] svg { fill: var(--tm-ink-muted) !important; }
+  [data-testid="stSelectboxVirtualDropdown"] {
+    background-color: var(--tm-paper) !important;
+    border: 1px solid var(--tm-line) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+  }
+  [data-testid="stSelectboxVirtualDropdown"] [role="listbox"],
+  [data-testid="stSelectboxVirtualDropdown"] [role="option"] {
+    background-color: transparent !important;
+    color: var(--tm-ink) !important;
+    -webkit-text-fill-color: var(--tm-ink) !important;
+  }
+  [data-testid="stSelectboxVirtualDropdown"] [role="option"]:hover,
+  [data-testid="stSelectboxVirtualDropdown"] [role="option"][aria-selected="true"] {
+    background-color: var(--tm-paper-2) !important;
+  }
+  /* radio + checkbox discs (react-aria hides the real input in a clipped span,
+     so :has() is how we reach the checked state) */
+  /* the disc is three nested divs: outer > ring > dot. The unselected dot is
+     a light fill in the startup theme, so an unchecked radio reads as a pale
+     blob on dark paper — style the ring and hollow the dot when unchecked. */
+  [data-testid="stRadioOption"] > div {
+    background-color: var(--tm-card) !important;
+    border-color: var(--tm-ink-muted) !important;
+  }
+  [data-testid="stRadioOption"] > div > div {
+    background-color: transparent !important;
+    border-color: var(--tm-ink-muted) !important;
+  }
+  [data-testid="stRadioOption"] > div > div > div {
+    background-color: transparent !important;
+  }
+  [data-testid="stRadioOption"]:has(input:checked) > div {
+    background-color: var(--tm-card) !important;
+    border-color: var(--tm-accent) !important;
+  }
+  [data-testid="stRadioOption"]:has(input:checked) > div > div {
+    background-color: transparent !important;
+    border-color: var(--tm-accent) !important;
+  }
+  [data-testid="stRadioOption"]:has(input:checked) > div > div > div {
+    background-color: var(--tm-accent) !important;
+  }
+  [data-testid="stCheckbox"] label:has(input:checked) > div {
+    background-color: var(--tm-accent) !important;
+    border-color: var(--tm-accent) !important;
+  }
+  [data-testid="stCheckbox"] label:has(input:checked) > div svg {
+    fill: var(--tm-paper) !important;
+  }
+  [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p,
+  [data-testid="stCheckbox"] [data-testid="stMarkdownContainer"] p,
+  [data-testid="stWidgetLabel"] { color: var(--tm-ink) !important; }
+  /* helper/info icons ship the startup theme's ink, invisible on dark paper */
+  [data-testid="stIconMaterial"],
+  [data-testid="stTooltipIcon"] { color: var(--tm-ink-muted) !important; }
+  [data-testid="stCaptionContainer"] { color: var(--tm-ink-muted) !important; }
+  [data-testid="stAlertContainer"] {
+    background-color: var(--tm-paper-2) !important;
+    color: var(--tm-ink) !important;
+    border: 1px solid var(--tm-line) !important;
+  }
+  [data-testid="stAlertContentInfo"],
+  [data-testid="stAlertContentWarning"],
+  [data-testid="stAlertContentSuccess"],
+  [data-testid="stAlertContentError"],
+  [data-testid="stAlertContent"] {
+    background-color: transparent !important;
+    color: var(--tm-ink) !important;
+    -webkit-text-fill-color: var(--tm-ink) !important;
+  }
+  /* Buttons. Secondary is emitted in two flavours (plain and form-submit) and
+     the hovered/active states carry their own backgrounds, so each state needs
+     its own rule or a hovered button flashes cream on dark paper. */
+  [data-testid="stBaseButton-secondary"] {
+    background-color: var(--tm-card) !important;
+    color: var(--tm-ink) !important;
+    border: 1px solid var(--tm-line) !important;
+  }
+  [data-testid="stBaseButton-secondary"]:hover,
+  [data-testid="stBaseButton-secondary"]:active,
+  [data-testid="stBaseButton-secondary"]:focus-visible {
+    background-color: var(--tm-paper-2) !important;
+    color: var(--tm-ink) !important;
+    border-color: var(--tm-accent) !important;
+  }
+  [data-testid="stBaseButton-secondary"]:disabled,
+  [data-testid="stBaseButton-secondary"][disabled] {
+    background-color: var(--tm-paper-2) !important;
+    color: var(--tm-hole) !important;
+    border-color: var(--tm-line) !important;
+  }
+  [data-testid="stBaseButton-primary"] {
+    background-color: var(--tm-accent) !important;
+    color: var(--tm-paper) !important;
+    border: 1px solid var(--tm-accent) !important;
+  }
+  [data-testid="stBaseButton-primary"] p,
+  [data-testid="stBaseButton-secondary"] p { color: inherit !important; }
+  /* header/menu buttons are icon-only and carry no background, so only the
+     glyph colour needs restating */
+  [data-testid="stBaseButton-header"],
+  [data-testid="stBaseButton-headerNoPadding"],
+  [data-testid="stMainMenuButton"],
+  [data-testid="stSidebarCollapseButton"] {
+    color: var(--tm-ink) !important;
+  }
+  [data-testid="stBaseButton-header"]:hover,
+  [data-testid="stMainMenuButton"]:hover { background-color: var(--tm-paper-2) !important; }
+  [data-testid="stAlertContentInfo"] { border-left: 3px solid var(--tm-accent) !important; }
+  [data-testid="stAlertContentWarning"] { border-left: 3px solid var(--tm-accent) !important; }
+  [data-testid="stAlertContentSuccess"] { border-left: 3px solid var(--tm-ok) !important; }
+  [data-testid="stAlertContentError"] { border-left: 3px solid var(--tm-danger) !important; }
 
   .tm-rule {
     border: none;
@@ -816,7 +1055,7 @@ CSS = """
   .tm-erratum {
     border: 1px solid var(--tm-danger);
     border-left: 3px solid var(--tm-danger);
-    background: #FBF0EE;
+    background: var(--tm-danger-soft);
     padding: 0.45rem 0.65rem;
     color: var(--tm-danger);
     font-family: var(--tm-sans);
@@ -1038,9 +1277,214 @@ def _css() -> str:
     )
 
 
-def inject(st) -> None:
-    """Apply the shared stylesheet once per render."""
+# ── chart series colors (single source; was hardcoded per-builder) ──
+# Light values preserve the original hexes exactly. Dark variants are
+# brightened for contrast on the night paper. Builders emit classes
+# (s-human / s-est / s-pack / s-band / s-grid / t-lab / t-axis) and no fills.
+CHART_CSS = """
+<style>
+  .tm-chart .s-grid { stroke: #D9D2C7; }
+  .tm-chart .s-human { stroke: #2F6F4E; }
+  .tm-chart circle.s-human, .tm-chart polygon.s-human { fill: #2F6F4E; }
+  .tm-chart .s-est { stroke: #6B4C9A; }
+  .tm-chart circle.s-est { fill: #6B4C9A; }
+  .tm-chart .s-pack { stroke: #9B7BB8; }
+  .tm-chart circle.s-hollow { fill: #FFFCF8; }
+  .tm-chart .s-band { fill: #CBB8E8; fill-opacity: 0.35; }
+  .tm-chart text.t-lab { fill: #1C1B19; }
+  .tm-chart text.t-axis { fill: #6B6560; }
+  .tm-legend i.est { background: #6B4C9A; }
+  .tm-legend i.pack { background: #9B7BB8; opacity: 0.7; height: 1px; }
+</style>
+"""
+
+# Newsprint after dark. Ink becomes warm paper, paper becomes warm ink;
+# ochre brightens so it keeps its job (substitutes, playheads, CTAs) at
+# ≥4.5:1. Semantic hues soften instead of inverting: danger blushes,
+# ok mints, judge violet lifts. Same rules, new variables — the system
+# doesn't change shape at night, only lamplight.
+DARK_VARS = {
+    "--tm-paper": "#171310",
+    "--tm-paper-2": "#211B14",
+    "--tm-card": "#262017",
+    "--tm-ink": "#F2EBDF",
+    "--tm-ink-muted": "#B4A78F",
+    "--tm-line": "#3E362A",
+    "--tm-accent": "#D99945",
+    "--tm-accent-soft": "rgba(217, 153, 69, 0.13)",
+    "--tm-accent-ink": "#E5B263",
+    "--tm-hole": "#8D8070",
+    "--tm-danger": "#DA8D7E",
+    "--tm-danger-soft": "#38211C",
+    "--tm-ok": "#82BC93",
+}
+
+# Everything native Streamlit paints from its own (light) theme, restyled
+# here so widgets don't glow white at night. Scoped to the same dark
+# activation as the variables (bare `:root` when forced, `@media` when auto).
+DARK_WIDGET_CSS = """
+  /* ── 0. Shell override. Streamlit themes itself with emotion (CSS-in-JS),
+        which injects <style data-emotion> into <head> AFTER any markdown
+        <style> we emit. Emotion's rules are class-based, so they tie our
+        selector on specificity and win on document order — which is why a
+        plain variable flip looked like it did nothing: the tray went dark,
+        the page stayed paper. `!important` is the only reliable way to win
+        against a runtime-injected sheet, so the shell is forced explicitly
+        rather than trusting cascade order. Also sets `color-scheme` so
+        native form controls, scrollbars, and focus rings follow. */
+  :root { color-scheme: dark; }
+  html, body,
+  .stApp,
+  [data-testid="stAppViewContainer"],
+  [data-testid="stMain"],
+  [data-testid="stMainBlockContainer"],
+  [data-testid="stSidebar"],
+  [data-testid="stHeader"],
+  [data-testid="stToolbar"],
+  [data-testid="stBottom"],
+  [data-testid="stStatusWidget"],
+  [data-testid="stDecoration"] {
+    background-color: var(--tm-paper) !important;
+    color: var(--tm-ink) !important;
+  }
+  /* deliberately NOT a descendant wildcard: our own components (cards,
+     accent chips, endpoints) carry explicit backgrounds and emotion never
+     styles them, so blanket-ing the tree would erase the design. */
+  html, body { background: var(--tm-paper) !important; }
+  [data-testid="stSidebar"],
+  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
+  [data-testid="stBottom"],
+  [data-testid="stStatusWidget"] {
+    background-color: var(--tm-paper-2) !important;
+  }
+  [data-testid="stHeader"],
+  [data-testid="stToolbar"],
+  [data-testid="stDecoration"] {
+    background-color: transparent !important;
+  }
+  .stApp a { color: var(--tm-accent-ink) !important; }
+  ::-webkit-scrollbar-thumb { background: var(--tm-line) !important; }
+  /* every text-bearing surface follows the token, not emotion's light set */
+  .stApp p, .stApp span, .stApp label, .stApp li, .stApp h1, .stApp h2,
+  .stApp h3, .stApp h4, .stApp td, .stApp th, .stApp small {
+    color: inherit;
+  }
+  [data-testid="stCaptionContainer"], .stCaption {
+    color: var(--tm-ink-muted) !important;
+  }
+  /* containers we own keep their surface tone */
+  [data-testid="stVerticalBlockBorderWrapper"] {
+    background: var(--tm-card) !important;
+    border-color: var(--tm-line) !important;
+    color: var(--tm-ink) !important;
+  }
+  [data-testid="stExpander"] {
+    background: var(--tm-paper) !important;
+    border-color: var(--tm-line) !important;
+    color: var(--tm-ink) !important;
+  }
+  /* Text entry, menus, tags, radio/checkbox and alerts are all handled in the
+     base "form fields" section: that layer is var()-driven, so it already
+     follows the dark palette from here. What remains below is only what
+     genuinely needs a night-specific value. */
+  [data-testid="stAlert"] {
+    background: var(--tm-card) !important;
+    border: 1px solid var(--tm-line) !important;
+    color: var(--tm-ink) !important;
+  }
+  [data-testid="stAlert"] p, [data-testid="stAlert"] li { color: var(--tm-ink) !important; }
+  /* chat input bar (playground chat) */
+  [data-testid="stChatInput"] > div {
+    background: var(--tm-card) !important;
+    border-color: var(--tm-line) !important;
+  }
+  [data-testid="stChatInput"] textarea {
+    background: transparent !important;
+    color: var(--tm-ink) !important;
+    caret-color: var(--tm-accent) !important;
+  }
+  [data-testid="stChatInput"] textarea::placeholder { color: var(--tm-ink-muted) !important; }
+  [data-testid="stChatInput"] button svg { fill: var(--tm-accent-ink) !important; }
+  [data-testid="stChatInput"] button:disabled svg { fill: var(--tm-hole) !important; }
+  /* inline code pills in markdown (blocks under pre: are untouched) */
+  .stApp :not(pre) > code {
+    background: var(--tm-paper-2) !important;
+    border: 1px solid var(--tm-line) !important;
+    color: var(--tm-ink) !important;
+  }
+  /* radio + checkbox discs are var-driven in the base form-fields section */
+  /* alerts keep their icon hue, gain night paper */
+  [data-testid="stAlert"] {
+    background: var(--tm-card) !important;
+    border: 1px solid var(--tm-line) !important;
+    color: var(--tm-ink) !important;
+  }
+  [data-testid="stAlert"] p, [data-testid="stAlert"] li { color: var(--tm-ink) !important; }
+  /* code / json / tables */
+  [data-testid="stJson"] {
+    background: var(--tm-paper-2) !important;
+    border: 1px solid var(--tm-line) !important;
+  }
+  [data-testid="stDataFrame"], [data-testid="stTable"] { border: 1px solid var(--tm-line); }
+  /* dividers, spinners, progress */
+  [data-testid="stDivider"] hr, hr { border-color: var(--tm-line) !important; }
+  [data-testid="stSpinner"] > div { border-top-color: var(--tm-accent) !important; }
+  [data-testid="stProgressBar"] > div > div { background: var(--tm-accent) !important; }
+  /* expanders already var-driven except the chevron */
+  [data-testid="stExpander"] svg { fill: var(--tm-ink-muted) !important; }
+  /* our chart series at night */
+  .tm-chart .s-grid { stroke: #3E362A; }
+  .tm-chart .s-human { stroke: #82BC93; }
+  .tm-chart circle.s-human, .tm-chart polygon.s-human { fill: #82BC93; }
+  .tm-chart .s-est { stroke: #A78BDB; }
+  .tm-chart circle.s-est { fill: #A78BDB; }
+  .tm-chart .s-pack { stroke: #B79AD9; }
+  .tm-chart circle.s-hollow { fill: #262017; }
+  .tm-chart .s-band { fill: #A78BDB; fill-opacity: 0.22; }
+  .tm-chart text.t-lab { fill: #F2EBDF; }
+  .tm-chart text.t-axis { fill: #B4A78F; }
+  .tm-legend i.est { background: #A78BDB; }
+  .tm-legend i.pack { background: #B79AD9; }
+  .tm-legend i.human { background: #82BC93; }
+"""
+
+
+def _dark_block() -> str:
+    vars_css = "\n".join(f"    {k}: {v};" for k, v in DARK_VARS.items())
+    return f":root {{\n{vars_css}\n  }}\n{DARK_WIDGET_CSS}"
+
+
+def dark_css(appearance: str) -> str:
+    """Dark stylesheet for an appearance mode: auto (media-wrapped), dark (bare), else empty."""
+    if appearance == "dark":
+        return f"<style>\n{_dark_block()}\n</style>"
+    if appearance == "auto":
+        return f"<style>\n@media (prefers-color-scheme: dark) {{\n{_dark_block()}\n}}\n</style>"
+    return ""
+
+
+APPEARANCE_CHOICES = ("auto", "light", "dark")
+
+
+def resolve_appearance(default: str = "auto") -> str:
+    """Read the sidebar Appearance choice; safe without a Streamlit context (tests, stubs)."""
+    try:
+        import streamlit as st
+
+        value = st.session_state.get("appearance", default)
+    except Exception:
+        return default
+    return value if value in APPEARANCE_CHOICES else default
+
+
+def inject(st, appearance: str | None = None) -> None:
+    """Apply the shared stylesheet once per render, plus dark mode per appearance."""
     st.markdown(_css(), unsafe_allow_html=True)
+    st.markdown(CHART_CSS, unsafe_allow_html=True)
+    mode = appearance or resolve_appearance()
+    css = dark_css(mode)
+    if css:
+        st.markdown(css, unsafe_allow_html=True)
 
 
 def kicker(text: str) -> str:
@@ -1167,3 +1611,240 @@ def card_head(year: str, name: str, *chips: str) -> str:
         f'<div class="tm-card-meta">{"".join(chips)}</div>'
         "</div>"
     )
+
+
+# ── Lifeline hero-rail island (newsprint-matched tray) ──
+# Ported motion + rail logic from evilrabbit/lifeline (MIT). The island lives
+# in an iframe (st.components.v1.html), so this CSS is self-contained — but
+# every token below mirrors the newsprint system above (paper/ink/ochre,
+# serif display, ticket-stub 2px radii, 3px ink tray top). The rail reads as
+# the same timetable family as `.tm-timetable` and `.tm-departure`, not a
+# foreign zinc module. Honesty encoding is unchanged: hole dashed, sub ochre,
+# avail ink, gaps faint.
+LIFELINE_ISLAND_CSS = """
+  :root {
+    --ll-bg: #F7F4EF;
+    --ll-surface: #FFFCF8;
+    --ll-ink: #1C1B19;
+    --ll-muted: #6B6560;
+    --ll-line: #D9D2C7;
+    --ll-line-strong: #b9b0a2;
+    --ll-dash: #A39A8E;
+    --ll-accent: #C47B2D;
+    --ll-accent-ink: #A35F14;
+    --ll-accent-soft: #FBF3E8;
+    --ll-ok: #2F6F4E;
+    --ll-danger: #8B3A2F;
+    --ll-hole: #A39A8E;
+    --ll-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --ll-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, 'Times New Roman', serif;
+    --ll-mono: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--ll-bg);
+    color: var(--ll-ink);
+    font-family: var(--ll-font);
+    -webkit-font-smoothing: antialiased;
+  }
+  .ll-shell { padding: 14px 16px 12px; }
+  .ll-top {
+    display: flex; align-items: baseline; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .ll-title {
+    font-family: var(--ll-serif);
+    font-size: 15px; font-weight: 700; letter-spacing: 0.01em;
+  }
+  .ll-sub {
+    font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ll-muted); font-weight: 600;
+    margin-left: auto; white-space: nowrap;
+  }
+  .ll-legend {
+    display: flex; flex-wrap: wrap; gap: 6px 14px;
+    font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ll-muted); font-weight: 600;
+    margin: 0 0 10px;
+  }
+  .ll-legend i {
+    display: inline-block; width: 18px; height: 2px;
+    background: var(--ll-ink); vertical-align: middle; margin-right: 5px;
+  }
+  .ll-legend i.sub { background: var(--ll-accent); height: 3px; }
+  .ll-legend i.hole { background: transparent; border-top: 2px dashed var(--ll-hole); height: 0; }
+  .ll-legend i.gap { background: var(--ll-line-strong); }
+  .ll-legend i.live { background: var(--ll-accent); height: 3px; }
+  .ll-viewport {
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    border: 1px solid var(--ll-line);
+    border-top: 3px solid var(--ll-ink);
+    background: var(--ll-surface);
+    border-radius: 0;
+  }
+  .ll-track {
+    display: flex; align-items: stretch;
+    min-width: max-content; position: relative;
+    padding: 0;
+  }
+  .ll-shield {
+    position: sticky; left: 0; z-index: 20;
+    width: 92px; min-width: 92px;
+    background: var(--ll-surface);
+    border-right: 1px solid var(--ll-line);
+    padding: 12px 10px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .ll-shield .age {
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ll-muted); font-weight: 700;
+  }
+  .ll-shield .years {
+    font-family: var(--ll-serif); font-weight: 700; font-size: 13px;
+  }
+  .ll-shield .hint { font-size: 10.5px; color: var(--ll-muted); line-height: 1.4; }
+  .ll-rail-wrap { position: relative; display: flex; }
+  .ll-rail {
+    position: absolute; left: 0; right: 0; top: 46px; height: 0;
+    border-top: 1px solid var(--ll-ink);
+    opacity: 0.35;
+    transform-origin: left center;
+  }
+  .ll-rail.solid { border-top-style: solid; opacity: 0.35; }
+  .ll-markers { display: flex; align-items: stretch; position: relative; }
+  .ll-stop {
+    scroll-snap-align: start;
+    width: 132px; min-width: 132px; max-width: 132px;
+    padding: 14px 10px 12px;
+    text-align: left; position: relative;
+    border: 0; border-right: 1px solid var(--ll-line);
+    background: transparent; cursor: default;
+    font-family: var(--ll-font);
+  }
+  .ll-stop:last-child { border-right: 0; }
+  .ll-stop:focus-visible { outline: 2px solid var(--ll-accent); outline-offset: -2px; }
+  .ll-stop .tick { width: 1px; height: 10px; background: var(--ll-ink); margin: 0 0 4px 2px; }
+  .ll-stop.is-hole .tick { background: transparent; border-left: 1px dashed var(--ll-hole); width: 0; }
+  .ll-stop.is-gap .tick { background: var(--ll-line-strong); }
+  .ll-dot {
+    width: 10px; height: 10px; border-radius: 2px;
+    border: 1.5px solid var(--ll-ink); background: var(--ll-surface);
+    margin: 0 0 8px 0;
+  }
+  .ll-stop.is-sub .ll-dot { border-color: var(--ll-accent); background: var(--ll-accent-soft); }
+  .ll-stop.is-hole .ll-dot { border-style: dashed; border-color: var(--ll-hole); background: transparent; border-radius: 50%; }
+  .ll-stop.is-gap .ll-dot { border-color: var(--ll-line-strong); background: var(--ll-bg); border-radius: 50%; width: 8px; height: 8px; }
+  .ll-stop.is-now .ll-dot, .ll-stop.is-next .ll-dot { background: var(--ll-accent); border-color: var(--ll-accent-ink); }
+  .ll-stop.is-done .ll-dot { background: var(--ll-ok); border-color: var(--ll-ok); }
+  .ll-stop.is-live .ll-dot { background: var(--ll-accent); border-color: var(--ll-accent-ink); animation: ll-pulse 1.1s ease-in-out infinite; }
+  .ll-stop.is-failed .ll-dot { background: var(--ll-danger); border-color: var(--ll-danger); }
+  @keyframes ll-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.35); } }
+  .ll-year {
+    font-family: var(--ll-serif); font-variant-numeric: tabular-nums;
+    font-size: 14px; font-weight: 700; line-height: 1.1;
+  }
+  .ll-stop.is-hole .ll-year, .ll-stop.is-gap .ll-year { color: var(--ll-hole); font-weight: 600; }
+  .ll-name {
+    font-size: 11.5px; font-weight: 650; line-height: 1.3;
+    margin-top: 3px; min-height: 2.6em;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .ll-stop.is-hole .ll-name { color: var(--ll-muted); font-weight: 500; font-style: italic; }
+  .ll-stop.is-gap .ll-name { color: var(--ll-dash); font-weight: 500; }
+  .ll-meta {
+    font-size: 9.5px; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--ll-muted); font-weight: 700; margin-top: 4px;
+  }
+  .ll-flag {
+    display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 1px 5px; border-radius: 2px; margin-top: 6px;
+  }
+  .ll-flag.next { background: var(--ll-ink); color: var(--ll-bg); }
+  .ll-flag.done { background: transparent; border: 1px solid var(--ll-ok); color: var(--ll-ok); }
+  .ll-flag.live { background: var(--ll-accent); color: var(--ll-bg); }
+  .ll-flag.failed { background: transparent; border: 1px solid var(--ll-danger); color: var(--ll-danger); }
+  .ll-preview {
+    font-size: 11px; color: var(--ll-muted); line-height: 1.45; margin-top: 6px;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .ll-stop:hover .ll-name, .ll-stop:focus .ll-name { color: var(--ll-accent-ink); }
+  .ll-playhead {
+    position: absolute; top: 0; bottom: 0; width: 0;
+    border-left: 1.5px dashed var(--ll-accent);
+    pointer-events: none; z-index: 5;
+  }
+  .ll-playhead span {
+    position: absolute; top: 4px; left: 5px;
+    font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ll-accent-ink); font-weight: 800; white-space: nowrap;
+    background: var(--ll-surface); padding: 0 4px;
+  }
+  .ll-rail-intro { transform: scaleX(var(--ll-intro, 0)); }
+  .ll-marker-intro { opacity: 0; animation: ll-marker-in 420ms cubic-bezier(0.22,1,0.36,1) forwards; }
+  @keyframes ll-marker-in { from { opacity: 0; transform: translate3d(0,6px,0); } to { opacity: 1; transform: none; } }
+  .ll-labels-intro { opacity: 0; animation: ll-labels-in 600ms cubic-bezier(0.22,1,0.36,1) forwards; }
+  @keyframes ll-labels-in { from { opacity: 0; } to { opacity: 1; } }
+  .ll-foot {
+    display: flex; flex-wrap: wrap; gap: 4px 12px;
+    font-family: var(--ll-mono); font-size: 10.5px; color: var(--ll-muted);
+    margin-top: 8px;
+  }
+  .ll-endpoint {
+    border-left: 3px solid var(--ll-accent);
+    background: var(--ll-accent-soft);
+    padding: 6px 9px; font-size: 11.5px; margin-top: 8px; border-radius: 0 2px 2px 0;
+  }
+  .ll-endpoint.muted { border-left-color: var(--ll-hole); border-left-style: dashed; background: transparent; }
+  @media (max-width: 640px) {
+    .ll-track { min-width: 0; }
+    .ll-shield { display: none; }
+    .ll-viewport { overflow-x: hidden; }
+    .ll-rail-wrap { width: 100%; }
+    .ll-markers { flex-direction: column; width: 100%; }
+    .ll-stop { width: 100%; min-width: 0; max-width: none; border-right: 0; border-bottom: 1px solid var(--ll-line); }
+    .ll-rail { display: none; }
+    .ll-playhead { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .ll-marker-intro, .ll-labels-intro { opacity: 1 !important; }
+    .ll-rail-intro { transform: none !important; }
+    .ll-stop.is-live .ll-dot { animation: none !important; }
+  }
+"""
+
+
+def lifeline_island_css() -> str:
+    """Standalone <style> for the hero-rail iframe island."""
+    return f"<style>{LIFELINE_ISLAND_CSS}</style>"
+
+
+# Night paper for the hero rail island. Same shape, lamplight palette —
+# mirrors DARK_VARS under the island's own --ll-* names.
+DARK_ISLAND_VARS = {
+    "--ll-bg": "#171310",
+    "--ll-surface": "#262017",
+    "--ll-ink": "#F2EBDF",
+    "--ll-muted": "#B4A78F",
+    "--ll-line": "#3E362A",
+    "--ll-line-strong": "#5A4F3D",
+    "--ll-dash": "#8D8070",
+    "--ll-accent": "#D99945",
+    "--ll-accent-ink": "#E5B263",
+    "--ll-accent-soft": "rgba(217, 153, 69, 0.13)",
+    "--ll-ok": "#82BC93",
+    "--ll-danger": "#DA8D7E",
+    "--ll-hole": "#8D8070",
+}
+
+
+def lifeline_island_dark_css(appearance: str) -> str:
+    """Island dark styles: media-wrapped for auto, body.ll-dark-scoped for forced dark."""
+    vars_css = "\n".join(f"    {k}: {v};" for k, v in DARK_ISLAND_VARS.items())
+    if appearance == "dark":
+        return f"<style>\n  body.ll-dark {{\n{vars_css}\n  }}\n</style>"
+    if appearance == "auto":
+        return f"<style>\n  @media (prefers-color-scheme: dark) {{\n    :root {{\n{vars_css}\n    }}\n  }}\n</style>"
+    return ""

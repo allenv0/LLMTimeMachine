@@ -80,25 +80,25 @@ def _svg_curve(points: list[CurvePoint]) -> str:
     dots = []
     for p in points:
         dots.append(
-            f'<circle cx="{x_of(p.display_year):.1f}" cy="{y_of(p.ordinal):.1f}" r="4" fill="#2f6f4e"/>'
-            f'<text x="{x_of(p.display_year):.1f}" y="{y_of(p.ordinal) - 8:.1f}" text-anchor="middle" '
-            f'font-size="11" fill="#1a1a1a">{p.display_year}</text>'
+            f'<circle class="s-human" cx="{x_of(p.display_year):.1f}" cy="{y_of(p.ordinal):.1f}" r="4"/>'
+            f'<text class="t-lab" x="{x_of(p.display_year):.1f}" y="{y_of(p.ordinal) - 8:.1f}" text-anchor="middle" '
+            f'font-size="11">{p.display_year}</text>'
         )
     mid_y = y_of(0)
     return (
-        f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" '
+        f'<svg class="tm-chart" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" '
         f'font-family="-apple-system, sans-serif" style="max-width:100%;height:auto;">'
-        f'<line x1="{pad_l}" y1="{mid_y}" x2="{w - pad_r}" y2="{mid_y}" stroke="#ccc" stroke-width="1"/>'
-        f'<text x="8" y="{y_of(2) + 4}" font-size="10" fill="#666">+2</text>'
-        f'<text x="8" y="{y_of(0) + 4}" font-size="10" fill="#666">0</text>'
-        f'<text x="8" y="{y_of(-2) + 4}" font-size="10" fill="#666">-2</text>'
+        f'<line class="s-grid" x1="{pad_l}" y1="{mid_y}" x2="{w - pad_r}" y2="{mid_y}" stroke-width="1"/>'
+        f'<text class="t-axis" x="8" y="{y_of(2) + 4}" font-size="10">+2</text>'
+        f'<text class="t-axis" x="8" y="{y_of(0) + 4}" font-size="10">0</text>'
+        f'<text class="t-axis" x="8" y="{y_of(-2) + 4}" font-size="10">-2</text>'
         + (
-            f'<polyline points="{coords}" fill="none" stroke="#2f6f4e" stroke-width="2"/>'
+            f'<polyline class="s-human" points="{coords}" fill="none" stroke-width="2"/>'
             if len(points) >= 2
             else ""
         )
         + "".join(dots)
-        + f'<text x="{w / 2}" y="{h - 6}" text-anchor="middle" font-size="10" fill="#666">year →</text>'
+        + f'<text class="t-axis" x="{w / 2}" y="{h - 6}" text-anchor="middle" font-size="10">year →</text>'
         f"</svg>"
     )
 

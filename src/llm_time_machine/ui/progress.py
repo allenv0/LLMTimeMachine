@@ -58,6 +58,33 @@ def _status_class(status: str) -> str:
     }.get(status, "waiting")
 
 
+def to_rail_statuses(
+    statuses: dict[str, str] | None = None,
+    runs: list | None = None,
+) -> dict[str, str]:
+    """Normalize departure-board / ModelRun states for the hero rail dots.
+
+    Accepts either the live `statuses` map (waiting/loading/generating/
+    complete/failed) or a list of `ModelRun`, preferring terminal run states.
+    """
+    out: dict[str, str] = {}
+    if statuses:
+        out.update(dict(statuses))
+    if runs:
+        for r in runs:
+            mid = getattr(r, "model_id", None)
+            if not mid:
+                continue
+            rs = getattr(r, "status", "")
+            if rs == "completed":
+                out[mid] = "complete"
+            elif rs in {"failed", "timed_out", "unsupported", "cancelled"}:
+                out[mid] = "failed"
+            else:
+                out.setdefault(mid, str(rs or "waiting"))
+    return out
+
+
 def render_progress(st, models: list, statuses: dict[str, str], details: dict[str, str] | None = None):
     details = details or {}
     theme.inject(st)
